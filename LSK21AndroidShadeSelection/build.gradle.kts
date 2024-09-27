@@ -1,10 +1,13 @@
+import org.jetbrains.kotlin.ir.types.getPublicSignature
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
-    //id("maven-publish")
+    `maven-publish`
 }
 
 android {
+
     namespace = "com.app.lsk21androidshadeselection"
     compileSdk = 34
 
@@ -16,6 +19,7 @@ android {
     }
 
     buildTypes {
+
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -25,8 +29,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlinOptions {
         jvmTarget = "1.8"
@@ -43,4 +47,16 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+}
+publishing {
+    publications {
+        register<MavenPublication>("release") {
+            afterEvaluate{
+                from(components["release"])
+            }
+            /*groupId = "com.shade.selection"
+            artifactId = "library"
+            version = "1.1.0"*/
+        }
+    }
 }
