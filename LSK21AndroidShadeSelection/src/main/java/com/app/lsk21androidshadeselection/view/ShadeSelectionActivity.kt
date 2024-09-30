@@ -6,9 +6,12 @@ import android.graphics.Bitmap
 import android.media.Image
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Base64
 import android.util.Log
 import android.view.MotionEvent
+import android.view.PixelCopy
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -20,8 +23,8 @@ import com.app.lsk21androidshadeselection.databinding.ActivityShadeSelectionBind
 import com.app.lsk21androidshadeselection.modal.ModalToParse
 import com.app.lsk21androidshadeselection.util.YuvToRgbConverter
 import com.app.teethdetectioncameralibrary.viewModel.ShadeSelectionViewModel
-import com.google.ar.core.exceptions.DeadlineExceededException
 import com.google.ar.sceneform.AnchorNode
+import com.google.ar.sceneform.ArSceneView
 import com.google.ar.sceneform.Node
 import com.google.ar.sceneform.assets.RenderableSource
 import com.google.ar.sceneform.rendering.Color
@@ -34,23 +37,28 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 import java.util.concurrent.CompletableFuture
+
 
 class ShadeSelectionActivity : AppCompatActivity() {
     private lateinit var binding:ActivityShadeSelectionBinding
     private lateinit var arFragment: ArFragment
     private val modelFiles = arrayListOf<ModalToParse>()
+    private val selectedShades = arrayListOf<String>()
     private val yAxis = -0.034f
     private val shiftYAxis: Float = 0.0040f
     private lateinit var viewModel: ShadeSelectionViewModel
     val modelNode: HashMap<String, TransformableNode> = HashMap()
     private  var base64: String? = null
-    private var resultString = "submit,"
+    private var capturedBitmap: Bitmap? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
@@ -103,7 +111,7 @@ class ShadeSelectionActivity : AppCompatActivity() {
                                             var temp = TransformableNode(arFragment.transformationSystem)
                                             modelNode[fetchCode(modelToParse.texturePath)] = temp
                                             addModelToScene(renderable,x,temp)
-                                            x += 0.0072f//0.006
+                                            x += 0.0070f//0.006
                                         }
                                     }
                                 }
@@ -131,18 +139,17 @@ class ShadeSelectionActivity : AppCompatActivity() {
             if(it.status.toString().equals("1")){
                 binding.btnAiIcon.isEnabled = true
                 if(it.colorRecommendation!=null && it.colorRecommendation.color1!=null){
-                    resultString = resultString.plus(it.colorRecommendation.color1.shadeCode).plus(",")
+                    selectedShades.add(it.colorRecommendation.color1.shadeCode)
                     updateOnBasisOfShadeCode(it.colorRecommendation.color1.shadeCode)
                 }
                 if(it.colorRecommendation!=null && it.colorRecommendation.color2!=null){
+                    selectedShades.add(it.colorRecommendation.color2.shadeCode)
                     updateOnBasisOfShadeCode(it.colorRecommendation.color2.shadeCode)
-                    resultString = resultString.plus(it.colorRecommendation.color2.shadeCode).plus(",")
                 }
                 if(it.colorRecommendation!=null && it.colorRecommendation.color3!=null){
+                    selectedShades.add(it.colorRecommendation.color3.shadeCode)
                     updateOnBasisOfShadeCode(it.colorRecommendation.color3.shadeCode)
-                    resultString = resultString.plus(it.colorRecommendation.color3.shadeCode).plus(",")
                 }
-                resultString = resultString.plus(base64)
                 binding.btnSubmit.visibility = View.VISIBLE
                 binding.txtMsg.visibility = View.GONE
             }else{
@@ -276,64 +283,68 @@ class ShadeSelectionActivity : AppCompatActivity() {
     }
     private fun onModelClicked(node: Node) {
         if (node != null) {
+            val shadeCode = fetchCodeFromNode(node)
             if(node.localPosition.y == yAxis-yAxis){
-                placeAtYAxis(node)
+                if(shadeCode!=null){
+                    selectedShades.remove(shadeCode)
+                    placeAtYAxis(node)
+                }
+
                 return
             }
-            //shiftYAxis(node)
+            if(selectedShades.size<6){
+                if(shadeCode!=null){
+                    selectedShades.add(shadeCode)
+                    shiftYAxis(node)
+                }
+            }else{
+                showToast("Sorry, you have reached maximum limit")
+            }
         }
     }
     public fun fetchShade(view: View) {
-        var image: Image? = null
-        try {
-            binding.btnAiIcon.isEnabled = false
-            val frame = arFragment.arSceneView.arFrame
-            if (frame != null) {
-                MainScope().launch {
-                    var bitmap: Bitmap? = null
-                    CoroutineScope(Dispatchers.IO).async {
-                        image = frame!!.acquireCameraImage()
-                        if (image != null) {
-                            bitmap = fetchBitMap(image!!)
-                        }
-                    }.await()
-                    if (bitmap != null) {
-                        base64 = bitmapToBase64(bitmap!!)
-                        saveImage(bitmap!!)
+        if(selectedShades.size<=3){
+            // Launch a coroutine
+            CoroutineScope(Dispatchers.IO).launch {
+                val result = copyPixels()
+                if(result==PixelCopy.SUCCESS && capturedBitmap!=null){
+                    runOnUiThread {
+                        binding.txtMsg.visibility = View.VISIBLE
+                        binding.btnAiIcon.isEnabled = false
+                    }
+                    base64 = bitmapToBase64(capturedBitmap!!)
+                    saveImage(capturedBitmap!!)
+
+                }else{
+                    runOnUiThread {
+                        Toast.makeText(this@ShadeSelectionActivity,"Fail to Process Bitmap",Toast.LENGTH_LONG).show()
                     }
                 }
+                /*withContext(Dispatchers.Main) {
+                    if (result == PixelCopy.SUCCESS && capturedBitmap!=null) {
+                        base64 = bitmapToBase64(capturedBitmap!!)
+                        saveImage(capturedBitmap!!)
+                        Toast.makeText(this@ShadeSelectionActivity,"Process Bitmap",Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(this@ShadeSelectionActivity,"Fail to Process Bitmap",Toast.LENGTH_LONG).show()
+                    }
+                }*/
             }
-        } catch (ex: DeadlineExceededException) {
-            binding.btnAiIcon.isEnabled = true
-            Log.e("Dead Line Exp: ", ex.message.toString())
-        } catch (ex: Exception) {
-            Log.e("Fail to Create Bitmap: ", ex.message.toString())
-        } finally {
-            image?.close()
-        }
 
-    }
-    private suspend fun fetchBitMap(image: Image): Bitmap?{
-        var bitmap: Bitmap? = null
-        try{
-            val yuvConverter = YuvToRgbConverter()
-            bitmap = yuvConverter.imageToBitmap(image)
-        }catch (ex: Exception){
-            Log.e("Fail to create image :",ex.message.toString())
+        }else{
+            showToast("you already selected more than three tabs manually")
         }
-        return bitmap
     }
-    private fun saveImage(bitmap: Bitmap?) {
+    private fun saveImage(bitmap: Bitmap?){
         val fileOutputStream: FileOutputStream
         var dir = filesDir.absolutePath
-        val name = "captured_image.png"
+        val name = "captured_image_".plus(getCurrentTimeInHHmm()).plus(".png")
         try {
             var file = File(dir.plus("/").plus(name))
             fileOutputStream = FileOutputStream(file)
             bitmap!!.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
             fileOutputStream.close()
             MainScope().launch {
-                binding.txtMsg.visibility = View.VISIBLE
                 viewModel.fetchShades(file)
             }
         } catch (e: Exception) {
@@ -348,6 +359,16 @@ class ShadeSelectionActivity : AppCompatActivity() {
         var nameWithPath = ar[0]
         var ar1 = nameWithPath.split('/')
         return ar1[2]
+    }
+    private fun fetchCodeFromNode(node: Node):String?{
+        var code: String? = null
+        for ((key, value) in modelNode) {
+            if(value==node){
+                code = key
+                break
+            }
+        }
+        return code
     }
     private fun updateOnBasisOfShadeCode(shadeCode: String){
         for ((key, value) in modelNode) {
@@ -379,15 +400,105 @@ class ShadeSelectionActivity : AppCompatActivity() {
         finish()
     }
     public fun moveForward(view: View){
+        var resultString = "submit,"
+        for (item in selectedShades){
+            if(item!=null){
+                resultString = resultString.plus(item).plus(",")
+            }
+        }
+        resultString.plus(base64)
         val resultIntent = Intent()
+        resultString = resultString.plus(base64)
         resultIntent.putExtra("data",resultString)
         setResult(Activity.RESULT_OK,resultIntent)
         finish()
     }
-    fun bitmapToBase64(bitmap: Bitmap): String {
+    private fun bitmapToBase64(bitmap: Bitmap): String {
         val byteArrayOutputStream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
         val byteArray = byteArrayOutputStream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.NO_WRAP) // Use NO_WRAP to avoid newlines
     }
+    private fun getCurrentTimeInHHmm(): String {
+        val calendar = Calendar.getInstance()
+        val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+        return dateFormat.format(calendar.time)
+    }
+    private suspend fun copyPixels(): Int {
+        val view: ArSceneView = arFragment.arSceneView
+        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        return suspendCancellableCoroutine { continuation ->
+            PixelCopy.request(view, bitmap, { result ->
+                if(bitmap!=null)
+                    this.capturedBitmap = bitmap
+                continuation.resume(result) {
+                }
+            }, Handler(Looper.getMainLooper()))
+        }
+    }
+    private suspend fun fetchBitMap(image: Image): Bitmap?{
+        var bitmap: Bitmap? = null
+        try{
+            val yuvConverter = YuvToRgbConverter()
+            bitmap = yuvConverter.imageToBitmap(image)
+        }catch (ex: Exception){
+            Log.e("Fail to create image :",ex.message.toString())
+        }
+        return bitmap
+    }
+    /*@RequiresApi(Build.VERSION_CODES.KITKAT)
+    fun captureScreenshot(){
+
+        val view: ArSceneView = arFragment.arSceneView
+        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        PixelCopy.request(view, bitmap, { copyResult ->
+            if (copyResult === PixelCopy.SUCCESS) {
+                // Save bitmap
+                runOnUiThread {
+                    Toast.makeText(this@ShadeSelectionActivity,"Process Bitmap",Toast.LENGTH_LONG).show()
+                   saveImage(bitmap)
+                }
+            } else {
+                runOnUiThread {
+                    Toast.makeText(this@ShadeSelectionActivity,"Fail to capture image",Toast.LENGTH_LONG).show()
+                }
+            }
+        }, Handler(Looper.getMainLooper()))
+    }*/
 }
+
+
+/*
+var image: Image? = null
+try {
+    captureScreenshot()
+    val frame = arFragment.arSceneView.arFrame
+    if (true) {
+        MainScope().launch {
+            var bitmap: Bitmap? = null
+            var result:Int = -1
+            CoroutineScope(Dispatchers.IO).async {
+                result = copyPixels()
+                image = frame!!.acquireCameraImage()
+                if (image != null) {
+                    bitmap = fetchBitMap(image!!)
+                }
+            }.await()
+            if (bitmap != null) {
+                base64 = bitmapToBase64(bitmap!!)
+                saveImage(bitmap!!)
+            }
+            if(result == PixelCopy.SUCCESS && capturedBitmap!=null){
+                base64 = bitmapToBase64(capturedBitmap!!)
+                saveImage(capturedBitmap!!)
+            }
+        }
+    }
+} catch (ex: DeadlineExceededException) {
+    binding.btnAiIcon.isEnabled = true
+    Log.e("Dead Line Exp: ", ex.message.toString())
+} catch (ex: Exception) {
+    Log.e("Fail to Create Bitmap: ", ex.message.toString())
+} finally {
+    image?.close()
+}*/
