@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
-import com.app.lsk21androidshadeselection.ShadeSelectionActivity
+import com.app.lsk21androidshadeselection.view.ShadeSelectionActivity
 import com.app.shadeselection.databinding.ActivityTestBinding
 
 class TestActivity : AppCompatActivity() {

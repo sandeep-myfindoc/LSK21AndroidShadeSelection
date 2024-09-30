@@ -3,20 +3,80 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
+    <data>
 
-
-
+    </data>
     <RelativeLayout
         android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".TestActivity">
-        <Button
-            android:text="Send Data"
-            android:id="@+id/startTest"
+        tools:context=".view.TestScenceActivity">
+        <fragment
+            android:id="@+id/sceneform_fragment"
+            android:name="com.google.ar.sceneform.ux.ArFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+        <TextView
+            android:textSize="20dp"
+            android:textColor="#0099FF"
+            android:visibility="gone"
+            android:id="@+id/txtMsg"
+            android:layout_centerInParent="true"
+            android:text="AI choosing closer shade..."
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true">
-        </Button>
+            android:layout_height="wrap_content">
+
+        </TextView>
+
+        <!--<ImageView
+            android:padding="5dp"
+            android:layout_margin="20dp"
+            android:src="@drawable/camera_frame"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        </ImageView>-->
+        <ImageView
+            android:id="@+id/btnSubmit"
+            android:visibility="invisible"
+            android:onClick="moveForward"
+            android:src="@drawable/submit_button"
+            android:layout_marginTop="10dp"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentTop="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+        </ImageView>
+
+        <RelativeLayout
+            android:layout_marginTop="10dp"
+            android:layout_alignParentTop="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:id="@+id/layoutBack"
+                android:clickable="true"
+                android:onClick="moveBack"
+                android:gravity="center"
+                android:layout_alignParentLeft="true"
+                android:layout_width="60dp"
+                android:layout_height="60dp">
+                <ImageView
+                    android:src="@drawable/back_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                </ImageView>
+            </LinearLayout>
+            <ImageView
+                android:id="@+id/btnAiIcon"
+                android:src="@drawable/ai_icon"
+                android:onClick="fetchShade"
+                android:layout_marginRight="10dp"
+                android:layout_alignParentRight="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+            </ImageView>
+        </RelativeLayout>
+
     </RelativeLayout>
 </layout>
