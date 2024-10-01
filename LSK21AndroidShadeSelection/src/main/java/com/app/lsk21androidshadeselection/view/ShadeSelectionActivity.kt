@@ -46,6 +46,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.concurrent.CompletableFuture
+import kotlin.math.min
 
 
 class ShadeSelectionActivity : AppCompatActivity() {
@@ -57,6 +58,7 @@ class ShadeSelectionActivity : AppCompatActivity() {
     private val shiftYAxis: Float = 0.0040f
     private lateinit var viewModel: ShadeSelectionViewModel
     val modelNode: HashMap<String, TransformableNode> = HashMap()
+    val renderableList = arrayListOf<ModelRenderable>()
     private  var base64: String? = null
     private var capturedBitmap: Bitmap? = null
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,12 +66,6 @@ class ShadeSelectionActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
         arFragment = supportFragmentManager.findFragmentById(R.id.sceneform_fragment) as ArFragment
         viewModel = ViewModelProvider(this).get(ShadeSelectionViewModel::class.java)
-        /*binding.startTest.setOnClickListener {
-            val resultIntent = Intent()
-            resultIntent.putExtra("data","Data From App")
-            setResult(Activity.RESULT_OK,resultIntent)
-            finish()
-        }*/
         try{
             var cnt = 1
             for(cnt in 1..5){
@@ -91,6 +87,7 @@ class ShadeSelectionActivity : AppCompatActivity() {
                 modelFiles.add(ModalToParse("modal/tab".plus("1.glb"),
                     "modal/textures/YS".plus(cnt).plus("_BaseColor.png")))
             }
+            // Load 3D Modal
             GlobalScope.launch(Dispatchers.Main){
                 var x: Float = -0.067f//-0.056f
                 modelFiles.forEach { modelToParse ->
@@ -110,6 +107,7 @@ class ShadeSelectionActivity : AppCompatActivity() {
                                             renderable.isShadowReceiver = true*/
                                             var temp = TransformableNode(arFragment.transformationSystem)
                                             modelNode[fetchCode(modelToParse.texturePath)] = temp
+                                            renderableList.add(renderable)
                                             addModelToScene(renderable,x,temp)
                                             x += 0.0070f//0.006
                                         }
@@ -127,7 +125,39 @@ class ShadeSelectionActivity : AppCompatActivity() {
             ex.printStackTrace()
         }
         observeData()
+        //updateModalBasedOnLight()
     }
+    private fun updateModalBasedOnLight(){
+        arFragment.arSceneView.scene.addOnUpdateListener{frameTime->
+            val frame = arFragment.arSceneView.arFrame
+            if(frame!=null){
+                val lightEstimate = frame.lightEstimate
+                if(lightEstimate!=null){
+                    val ambientIntensity: Float = lightEstimate.pixelIntensity
+                    val color = getColorFromAmbientIntensity(ambientIntensity)
+                    updateMaterialColor(color)
+                }
+            }
+        }
+    }
+    private fun getColorFromAmbientIntensity(intensity: Float): Int {
+        val r = min((intensity * 2.55).toInt().toDouble(), 255.0).toInt()
+        return android.graphics.Color.rgb(r, r, r)
+    }
+    private fun updateMaterialColor(lightColor: Int){
+        val rgb = floatArrayOf(
+            ((lightColor shr 16) and 0xFF) / 255.0f,
+            ((lightColor shr 8) and 0xFF) / 255.0f,
+            (lightColor and 0xFF) / 255.0f
+        )
+        //addPointLight(rgb)
+        Log.e("RGB color is: ",rgb[0].toString().plus(" : ").plus(rgb[1].toString()).plus(" : ").plus(rgb[2].toString()))
+        for(item in renderableList){
+            var material = item.material
+            material.setFloat3("baseColor", Color(rgb[0],rgb[1],rgb[2]))
+        }
+    }
+
     private fun observeData(){
         viewModel.errMessage.observe(this@ShadeSelectionActivity, Observer {
             if(it.toString().isNotEmpty()){
@@ -267,7 +297,7 @@ class ShadeSelectionActivity : AppCompatActivity() {
         val floatArray: Array<Float> = arrayOf(averageRed.toFloat(), averageGreen.toFloat(), averageBlue.toFloat())
         return floatArray
     }
-    private fun addPointLight(): Light {
+    private fun addPointLight(): Light {//temp: FloatArray
         var pointLight = Light.builder(Light.Type.DIRECTIONAL)
             .setColor(Color(1.0f,1.0f,1.0f))
             //.setColorTemperature(2000f)
@@ -415,7 +445,7 @@ class ShadeSelectionActivity : AppCompatActivity() {
     }
     private fun bitmapToBase64(bitmap: Bitmap): String {
         val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream)
         val byteArray = byteArrayOutputStream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.NO_WRAP) // Use NO_WRAP to avoid newlines
     }
