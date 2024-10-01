@@ -54,8 +54,11 @@ class ShadeSelectionActivity : AppCompatActivity() {
     private lateinit var arFragment: ArFragment
     private val modelFiles = arrayListOf<ModalToParse>()
     private val selectedShades = arrayListOf<String>()
-    private val yAxis = -0.034f
-    private val shiftYAxis: Float = 0.0040f
+    private val yAxis = -0.040f
+    private val shiftYAxis: Float = 0.011f
+    private val minScale: Float = 0.05f
+    private val maxScale: Float = 1.3f
+    private val zoomAbleScale: Float = 1.9f
     private lateinit var viewModel: ShadeSelectionViewModel
     val modelNode: HashMap<String, TransformableNode> = HashMap()
     val renderableList = arrayListOf<ModelRenderable>()
@@ -247,8 +250,8 @@ class ShadeSelectionActivity : AppCompatActivity() {
         //modelNodeTemp.localPosition = com.google.ar.sceneform.math.Vector3(x,0.022f,-0.1f)
         modelNodeTemp.localPosition = com.google.ar.sceneform.math.Vector3(x,yAxis,-0.1f)
         // to scale model
-        modelNodeTemp.scaleController.minScale = 0.05f
-        modelNodeTemp.scaleController.maxScale = 1.3f
+        modelNodeTemp.scaleController.minScale = minScale
+        modelNodeTemp.scaleController.maxScale = maxScale
         modelNodeTemp.localScale = com.google.ar.sceneform.math.Vector3(1.0f, 1.0f, 1.0f)
         modelNodeTemp.light = addPointLight()
         arFragment.arSceneView.setOnTouchListener{ _, event ->
@@ -261,7 +264,7 @@ class ShadeSelectionActivity : AppCompatActivity() {
     private fun handleTouch(event: MotionEvent) {
         val hitTestResult = arFragment.arSceneView.scene.hitTest(event)
         if(hitTestResult.node!=null){
-            onModelClicked(hitTestResult.node!!)
+            onModelClicked(hitTestResult.node!! as TransformableNode)
         }
 
     }
@@ -311,10 +314,10 @@ class ShadeSelectionActivity : AppCompatActivity() {
         lightNode.worldPosition = Vector3(1f,0f,0f)
         lightNode.setParent(arFragment.arSceneView.scene)*/
     }
-    private fun onModelClicked(node: Node) {
+    private fun onModelClicked(node: TransformableNode) {
         if (node != null) {
             val shadeCode = fetchCodeFromNode(node)
-            if(node.localPosition.y == yAxis-yAxis){
+            if(node.localPosition.y == yAxis+shiftYAxis){
                 if(shadeCode!=null){
                     selectedShades.remove(shadeCode)
                     placeAtYAxis(node)
@@ -408,19 +411,21 @@ class ShadeSelectionActivity : AppCompatActivity() {
             }
         }
     }
-    private fun shiftYAxis(node: Node){
+    private fun shiftYAxis(node: TransformableNode){
         node.localPosition = com.google.ar.sceneform.math.Vector3(
             node.localPosition.x + 0.0f,
-            node.localPosition.y - yAxis,
+            node.localPosition.y + shiftYAxis,
             node.localPosition.z + 0.0f
         )
+        node.scaleController.maxScale = zoomAbleScale
     }
-    private fun placeAtYAxis(node: Node){
+    private fun placeAtYAxis(node: TransformableNode){
         node.localPosition = com.google.ar.sceneform.math.Vector3(
             node.localPosition.x + 0.0f,
             yAxis,
             node.localPosition.z + 0.0f
         )
+        node.scaleController.maxScale = maxScale
     }
     public fun moveBack(view: View){
         val resultIntent = Intent()
