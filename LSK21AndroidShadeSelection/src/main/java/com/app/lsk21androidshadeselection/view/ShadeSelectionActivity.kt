@@ -1,6 +1,7 @@
 package com.app.lsk21androidshadeselection.view
 
 import android.app.Activity
+import android.content.ContentValues
 import android.content.Intent
 import android.graphics.Bitmap
 import android.media.Image
@@ -8,6 +9,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.MediaStore
 import android.util.Base64
 import android.util.Log
 import android.view.MotionEvent
@@ -162,7 +164,28 @@ class ShadeSelectionActivity : AppCompatActivity() {
             material.setFloat3("baseColor", Color(rgb[0],rgb[1],rgb[2]))
         }
     }
+    private fun writeFileToMediaStore(fileName: String, content: String) {
+        // Prepare the ContentValues to define the file
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+            put(MediaStore.MediaColumns.MIME_TYPE, "text/plain")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, "Documents/MyAppFiles") // Specify the directory
+        }
 
+        // Insert the file into MediaStore and get the URI
+        val uri: Uri? = contentResolver.insert(MediaStore.Files.getContentUri("external"), values)
+
+        uri?.let {
+            // Open an output stream to write content to the file
+            contentResolver.openOutputStream(it).use { outputStream ->
+                outputStream?.write(content.toByteArray())
+                outputStream?.flush()
+                //Toast.makeText(this, "File written: $fileName", Toast.LENGTH_SHORT).show()
+            }
+        } ?: run {
+            Toast.makeText(this, "Failed to create file", Toast.LENGTH_SHORT).show()
+        }
+    }
     private fun observeData(){
         viewModel.errMessage.observe(this@ShadeSelectionActivity, Observer {
             if(it.toString().isNotEmpty()){
@@ -173,7 +196,8 @@ class ShadeSelectionActivity : AppCompatActivity() {
         viewModel.teetShadeResponseLiveData.observe(this@ShadeSelectionActivity, Observer {
             if(it.status.toString().equals("1")){
                 binding.btnAiIcon.isEnabled = true
-                showToast("Respose Received: ".plus(it.status.toString()))
+                writeFileToMediaStore("Log.txt", it.toString())
+                showToast("Respose Received: ".plus(it.toString()))
                 if(it.colorRecommendation!=null && it.colorRecommendation.color1!=null){
                     selectedShades.add(it.colorRecommendation.color1.shadeCode)
                     showToast("Respose Received: ".plus(it.colorRecommendation.color1.shadeCode.toString()))
@@ -391,7 +415,7 @@ class ShadeSelectionActivity : AppCompatActivity() {
         }
     }
     private fun showToast(msg: String){
-        Toast.makeText(this@ShadeSelectionActivity,msg, Toast.LENGTH_SHORT).show()
+        //Toast.makeText(this@ShadeSelectionActivity,msg, Toast.LENGTH_SHORT).show()
     }
     private fun fetchCode(texturePath: String):String{
         var ar = texturePath.split('_')
@@ -412,7 +436,6 @@ class ShadeSelectionActivity : AppCompatActivity() {
     private fun updateOnBasisOfShadeCode(shadeCode: String){
         for ((key, value) in modelNode) {
             if(key.equals(shadeCode)){
-                Toast.makeText(this@ShadeSelectionActivity,"Node Found To Shift Y Axis",Toast.LENGTH_LONG).show()
                 shiftYAxis(value)
                 break
             }
