@@ -69,6 +69,8 @@ class ShadeSelectionActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
         arFragment = supportFragmentManager.findFragmentById(R.id.sceneform_fragment) as ArFragment
         viewModel = ViewModelProvider(this).get(ShadeSelectionViewModel::class.java)
+        arFragment.planeDiscoveryController.hide()
+        arFragment.planeDiscoveryController.setInstructionView(null)
         try{
             var cnt = 1
             for(cnt in 1..5){
@@ -104,10 +106,10 @@ class ShadeSelectionActivity : AppCompatActivity() {
                                             renderable?.material?.setTexture("baseColor", texture)
                                             renderable?.material?.setTexture("metallic", metallicTexture)// metallicTexture
                                             renderable?.material?.setTexture("roughness", roughnessTexture)//roughnessTexture
-                                            renderable?.material?.setFloat3("ambientColor", ambientColor)
-                                            renderable?.material?.setFloat3("baseColorFactor", Color(1.0f, 1.0f, 1.0f))
-                                            /*renderable.isShadowCaster = true
-                                            renderable.isShadowReceiver = true*/
+                                            //renderable?.material?.setFloat3("ambientColor", ambientColor)
+                                            //renderable?.material?.setFloat3("baseColorFactor", Color(1.0f, 0.0f, 0.0f))
+                                            renderable.isShadowCaster = false
+                                            renderable.isShadowReceiver = false
                                             var temp = TransformableNode(arFragment.transformationSystem)
                                             modelNode[fetchCode(modelToParse.texturePath)] = temp
                                             renderableList.add(renderable)
@@ -171,16 +173,20 @@ class ShadeSelectionActivity : AppCompatActivity() {
         viewModel.teetShadeResponseLiveData.observe(this@ShadeSelectionActivity, Observer {
             if(it.status.toString().equals("1")){
                 binding.btnAiIcon.isEnabled = true
+                showToast("Respose Received: ".plus(it.status.toString()))
                 if(it.colorRecommendation!=null && it.colorRecommendation.color1!=null){
                     selectedShades.add(it.colorRecommendation.color1.shadeCode)
+                    showToast("Respose Received: ".plus(it.colorRecommendation.color1.shadeCode.toString()))
                     updateOnBasisOfShadeCode(it.colorRecommendation.color1.shadeCode)
                 }
                 if(it.colorRecommendation!=null && it.colorRecommendation.color2!=null){
                     selectedShades.add(it.colorRecommendation.color2.shadeCode)
+                    //Toast.makeText(this@ShadeSelectionActivity,"Respose Received: ".plus(it.colorRecommendation.color2.shadeCode.toString()),Toast.LENGTH_LONG).show()
                     updateOnBasisOfShadeCode(it.colorRecommendation.color2.shadeCode)
                 }
                 if(it.colorRecommendation!=null && it.colorRecommendation.color3!=null){
                     selectedShades.add(it.colorRecommendation.color3.shadeCode)
+                    //Toast.makeText(this@ShadeSelectionActivity,"Respose Received: ".plus(it.colorRecommendation.color3.shadeCode.toString()),Toast.LENGTH_LONG).show()
                     updateOnBasisOfShadeCode(it.colorRecommendation.color3.shadeCode)
                 }
                 binding.btnSubmit.visibility = View.VISIBLE
@@ -302,9 +308,9 @@ class ShadeSelectionActivity : AppCompatActivity() {
     }
     private fun addPointLight(): Light {//temp: FloatArray
         var pointLight = Light.builder(Light.Type.DIRECTIONAL)
-            .setColor(Color(1.0f,1.0f,1.0f))
+            //.setColor(Color(1.0f,1.0f,1.0f))
             //.setColorTemperature(2000f)
-            .setShadowCastingEnabled(true)
+            //.setShadowCastingEnabled(true)
             .setIntensity(100f)
             .setFalloffRadius(2.0f)
             .build()
@@ -385,7 +391,7 @@ class ShadeSelectionActivity : AppCompatActivity() {
         }
     }
     private fun showToast(msg: String){
-        Toast.makeText(this@ShadeSelectionActivity,msg, Toast.LENGTH_LONG).show()
+        Toast.makeText(this@ShadeSelectionActivity,msg, Toast.LENGTH_SHORT).show()
     }
     private fun fetchCode(texturePath: String):String{
         var ar = texturePath.split('_')
@@ -406,6 +412,7 @@ class ShadeSelectionActivity : AppCompatActivity() {
     private fun updateOnBasisOfShadeCode(shadeCode: String){
         for ((key, value) in modelNode) {
             if(key.equals(shadeCode)){
+                Toast.makeText(this@ShadeSelectionActivity,"Node Found To Shift Y Axis",Toast.LENGTH_LONG).show()
                 shiftYAxis(value)
                 break
             }
@@ -418,6 +425,7 @@ class ShadeSelectionActivity : AppCompatActivity() {
             node.localPosition.z + 0.0f
         )
         node.scaleController.maxScale = zoomAbleScale
+        showToast("Y Axis Shifted")
     }
     private fun placeAtYAxis(node: TransformableNode){
         node.localPosition = com.google.ar.sceneform.math.Vector3(
@@ -481,25 +489,7 @@ class ShadeSelectionActivity : AppCompatActivity() {
         }
         return bitmap
     }
-    /*@RequiresApi(Build.VERSION_CODES.KITKAT)
-    fun captureScreenshot(){
 
-        val view: ArSceneView = arFragment.arSceneView
-        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
-        PixelCopy.request(view, bitmap, { copyResult ->
-            if (copyResult === PixelCopy.SUCCESS) {
-                // Save bitmap
-                runOnUiThread {
-                    Toast.makeText(this@ShadeSelectionActivity,"Process Bitmap",Toast.LENGTH_LONG).show()
-                   saveImage(bitmap)
-                }
-            } else {
-                runOnUiThread {
-                    Toast.makeText(this@ShadeSelectionActivity,"Fail to capture image",Toast.LENGTH_LONG).show()
-                }
-            }
-        }, Handler(Looper.getMainLooper()))
-    }*/
 }
 
 
@@ -537,3 +527,22 @@ try {
 } finally {
     image?.close()
 }*/
+/*@RequiresApi(Build.VERSION_CODES.KITKAT)
+    fun captureScreenshot(){
+
+        val view: ArSceneView = arFragment.arSceneView
+        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        PixelCopy.request(view, bitmap, { copyResult ->
+            if (copyResult === PixelCopy.SUCCESS) {
+                // Save bitmap
+                runOnUiThread {
+                    Toast.makeText(this@ShadeSelectionActivity,"Process Bitmap",Toast.LENGTH_LONG).show()
+                   saveImage(bitmap)
+                }
+            } else {
+                runOnUiThread {
+                    Toast.makeText(this@ShadeSelectionActivity,"Fail to capture image",Toast.LENGTH_LONG).show()
+                }
+            }
+        }, Handler(Looper.getMainLooper()))
+    }*/
