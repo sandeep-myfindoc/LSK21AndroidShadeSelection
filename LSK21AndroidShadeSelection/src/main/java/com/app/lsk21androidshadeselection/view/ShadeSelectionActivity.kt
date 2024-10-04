@@ -46,6 +46,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -520,8 +521,36 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
     override fun onSucess(response: String) {
         binding.txtMsg.visibility = View.GONE
         writeFileToMediaStore("Report.txt", response.toString())
-        var res = Gson().fromJson<AIResponse>(response.toString(),object : TypeToken<AIResponse>() {}.type)
-        if(res!=null && res.status.toString().equals("1")){
+        //val res = Gson().fromJson<AIResponse>(response.toString(),object : TypeToken<AIResponse>() {}.type)
+        val jsonObject = JSONObject(response.toString())
+        if(jsonObject.getString("status").equals("1")){
+            val colorRecomendation = jsonObject.getJSONObject("color_recommendation")
+            val color1Obj = colorRecomendation.getJSONObject("color_1")
+            if(color1Obj.getString("shade_code")!=null){
+                var shadeCode = color1Obj.getString("shade_code")
+                selectedShades.add(shadeCode)
+                updateOnBasisOfShadeCode(shadeCode)
+            }
+            val color2Obj = colorRecomendation.getJSONObject("color_2")
+            if(color2Obj.getString("shade_code")!=null){
+                var shadeCode = color2Obj.getString("shade_code")
+                selectedShades.add(shadeCode)
+                updateOnBasisOfShadeCode(shadeCode)
+            }
+            val color3Obj = colorRecomendation.getJSONObject("color_3")
+            if(color3Obj.getString("shade_code")!=null){
+                var shadeCode = color3Obj.getString("shade_code")
+                selectedShades.add(shadeCode)
+                updateOnBasisOfShadeCode(shadeCode)
+            }
+            binding.btnSubmit.visibility = View.VISIBLE
+            binding.txtMsg.visibility = View.GONE
+        }else{
+            binding.btnAiIcon.isEnabled = true
+            showToast(jsonObject.getString("message"))
+            binding.txtMsg.visibility = View.GONE
+        }
+        /*if(res!=null && res.status.toString().equals("1")){
             if(res?.colorRecommendation!=null && res?.colorRecommendation?.color1!=null){
                 selectedShades.add(res.colorRecommendation.color1.shadeCode)
                 updateOnBasisOfShadeCode(res.colorRecommendation.color1.shadeCode)
@@ -536,15 +565,16 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
             }
             binding.btnSubmit.visibility = View.VISIBLE
             binding.txtMsg.visibility = View.GONE
-        }else{
+        }
+        else{
             binding.btnAiIcon.isEnabled = true
             showToast(res?.message.toString())
             binding.txtMsg.visibility = View.GONE
-        }
+        }*/
     }
 
     override fun onFailure(response: String) {
-
+        showToast("Something went wrong please try again later..")
     }
 }
 
