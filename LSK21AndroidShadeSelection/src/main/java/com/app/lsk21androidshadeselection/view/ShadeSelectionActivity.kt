@@ -519,6 +519,7 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
 
     override fun onSucess(response: String) {
         binding.txtMsg.visibility = View.GONE
+        writeFileToMediaStore("Report.txt", response.toString())
         var res = Gson().fromJson<AIResponse>(response.toString(),object : TypeToken<AIResponse>() {}.type)
         if(res!=null && res.status.toString().equals("1")){
             if(res?.colorRecommendation!=null && res?.colorRecommendation?.color1!=null){
