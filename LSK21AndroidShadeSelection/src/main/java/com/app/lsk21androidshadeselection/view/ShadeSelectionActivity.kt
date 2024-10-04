@@ -23,6 +23,9 @@ import androidx.lifecycle.ViewModelProvider
 import com.app.lsk21androidshadeselection.R
 import com.app.lsk21androidshadeselection.databinding.ActivityShadeSelectionBinding
 import com.app.lsk21androidshadeselection.modal.ModalToParse
+import com.app.lsk21androidshadeselection.modal.airesponse_modal.AIResponse
+import com.app.lsk21androidshadeselection.network.UploadFileToServer
+import com.app.lsk21androidshadeselection.util.ResultReceiver
 import com.app.lsk21androidshadeselection.util.YuvToRgbConverter
 import com.app.teethdetectioncameralibrary.viewModel.ShadeSelectionViewModel
 import com.google.ar.sceneform.AnchorNode
@@ -35,6 +38,8 @@ import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.ar.sceneform.rendering.Texture
 import com.google.ar.sceneform.ux.ArFragment
 import com.google.ar.sceneform.ux.TransformableNode
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -51,7 +56,7 @@ import java.util.concurrent.CompletableFuture
 import kotlin.math.min
 
 
-class ShadeSelectionActivity : AppCompatActivity() {
+class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
     private lateinit var binding:ActivityShadeSelectionBinding
     private lateinit var arFragment: ArFragment
     private val modelFiles = arrayListOf<ModalToParse>()
@@ -59,8 +64,8 @@ class ShadeSelectionActivity : AppCompatActivity() {
     private val yAxis = -0.040f
     private val shiftYAxis: Float = 0.011f
     private val minScale: Float = 0.05f
-    private val maxScale: Float = 1.3f
-    private val zoomAbleScale: Float = 1.9f
+    private val maxScale: Float = 1.15f
+    private val zoomAbleScale: Float = 1.6f
     private lateinit var viewModel: ShadeSelectionViewModel
     val modelNode: HashMap<String, TransformableNode> = HashMap()
     val renderableList = arrayListOf<ModelRenderable>()
@@ -96,7 +101,7 @@ class ShadeSelectionActivity : AppCompatActivity() {
             }
             // Load 3D Modal
             GlobalScope.launch(Dispatchers.Main){
-                var x: Float = -0.067f//-0.056f
+                var x: Float = -0.066f//-0.056f
                 modelFiles.forEach { modelToParse ->
                     loadModelAsync(modelToParse.modelPath).thenAccept { renderable ->
                         loadTextureAsync(modelToParse.texturePath).thenAccept {texture->
@@ -109,14 +114,14 @@ class ShadeSelectionActivity : AppCompatActivity() {
                                             renderable?.material?.setTexture("metallic", metallicTexture)// metallicTexture
                                             renderable?.material?.setTexture("roughness", roughnessTexture)//roughnessTexture
                                             //renderable?.material?.setFloat3("ambientColor", ambientColor)
-                                            //renderable?.material?.setFloat3("baseColorFactor", Color(1.0f, 0.0f, 0.0f))
+                                            renderable?.material?.setFloat3("baseColorFactor", Color(1.0f, 1.0f, 1.0f))
                                             renderable.isShadowCaster = false
                                             renderable.isShadowReceiver = false
                                             var temp = TransformableNode(arFragment.transformationSystem)
                                             modelNode[fetchCode(modelToParse.texturePath)] = temp
                                             renderableList.add(renderable)
                                             addModelToScene(renderable,x,temp)
-                                            x += 0.0070f//0.006
+                                            x += 0.0067f//0.006
                                         }
                                     }
                                 }
@@ -195,17 +200,13 @@ class ShadeSelectionActivity : AppCompatActivity() {
         })
         viewModel.teetShadeResponseLiveData.observe(this@ShadeSelectionActivity, Observer {
             if(it.status.toString().equals("1")){
-                binding.btnAiIcon.isEnabled = true
-                writeFileToMediaStore("Log.txt", it.toString())
-                showToast("Respose Received: ".plus(it.toString()))
+                /*writeFileToMediaStore("Log.txt", it.toString())*/
                 if(it.colorRecommendation!=null && it.colorRecommendation.color1!=null){
                     selectedShades.add(it.colorRecommendation.color1.shadeCode)
-                    showToast("Respose Received: ".plus(it.colorRecommendation.color1.shadeCode.toString()))
                     updateOnBasisOfShadeCode(it.colorRecommendation.color1.shadeCode)
                 }
                 if(it.colorRecommendation!=null && it.colorRecommendation.color2!=null){
                     selectedShades.add(it.colorRecommendation.color2.shadeCode)
-                    //Toast.makeText(this@ShadeSelectionActivity,"Respose Received: ".plus(it.colorRecommendation.color2.shadeCode.toString()),Toast.LENGTH_LONG).show()
                     updateOnBasisOfShadeCode(it.colorRecommendation.color2.shadeCode)
                 }
                 if(it.colorRecommendation!=null && it.colorRecommendation.color3!=null){
@@ -350,6 +351,9 @@ class ShadeSelectionActivity : AppCompatActivity() {
             if(node.localPosition.y == yAxis+shiftYAxis){
                 if(shadeCode!=null){
                     selectedShades.remove(shadeCode)
+                    if(selectedShades.size==0){
+                        binding.btnAiIcon.isEnabled = true
+                    }
                     placeAtYAxis(node)
                 }
 
@@ -407,15 +411,16 @@ class ShadeSelectionActivity : AppCompatActivity() {
             fileOutputStream = FileOutputStream(file)
             bitmap!!.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
             fileOutputStream.close()
-            MainScope().launch {
+            /*MainScope().launch {
                 viewModel.fetchShades(file)
-            }
+            }*/
+            UploadFileToServer(file.absolutePath,this).execute()
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
     private fun showToast(msg: String){
-        //Toast.makeText(this@ShadeSelectionActivity,msg, Toast.LENGTH_SHORT).show()
+        Toast.makeText(this@ShadeSelectionActivity,msg, Toast.LENGTH_SHORT).show()
     }
     private fun fetchCode(texturePath: String):String{
         var ar = texturePath.split('_')
@@ -448,7 +453,6 @@ class ShadeSelectionActivity : AppCompatActivity() {
             node.localPosition.z + 0.0f
         )
         node.scaleController.maxScale = zoomAbleScale
-        showToast("Y Axis Shifted")
     }
     private fun placeAtYAxis(node: TransformableNode){
         node.localPosition = com.google.ar.sceneform.math.Vector3(
@@ -513,6 +517,34 @@ class ShadeSelectionActivity : AppCompatActivity() {
         return bitmap
     }
 
+    override fun onSucess(response: String) {
+        binding.txtMsg.visibility = View.GONE
+        var res = Gson().fromJson<AIResponse>(response.toString(),object : TypeToken<AIResponse>() {}.type)
+        if(res!=null && res.status.toString().equals("1")){
+            if(res?.colorRecommendation!=null && res?.colorRecommendation?.color1!=null){
+                selectedShades.add(res.colorRecommendation.color1.shadeCode)
+                updateOnBasisOfShadeCode(res.colorRecommendation.color1.shadeCode)
+            }
+            if(res?.colorRecommendation!=null && res?.colorRecommendation?.color2!=null){
+                selectedShades.add(res.colorRecommendation.color2.shadeCode)
+                updateOnBasisOfShadeCode(res.colorRecommendation.color2.shadeCode)
+            }
+            if(res?.colorRecommendation!=null && res?.colorRecommendation?.color3!=null){
+                selectedShades.add(res.colorRecommendation.color3.shadeCode)
+                updateOnBasisOfShadeCode(res.colorRecommendation.color3.shadeCode)
+            }
+            binding.btnSubmit.visibility = View.VISIBLE
+            binding.txtMsg.visibility = View.GONE
+        }else{
+            binding.btnAiIcon.isEnabled = true
+            showToast(res?.message.toString())
+            binding.txtMsg.visibility = View.GONE
+        }
+    }
+
+    override fun onFailure(response: String) {
+
+    }
 }
 
 
