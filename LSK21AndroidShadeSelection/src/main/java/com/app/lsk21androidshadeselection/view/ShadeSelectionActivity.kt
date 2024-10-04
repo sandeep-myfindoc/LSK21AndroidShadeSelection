@@ -137,7 +137,7 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
         }catch(ex: Exception){
             ex.printStackTrace()
         }
-        observeData()
+        //observeData()
         //updateModalBasedOnLight()
     }
     private fun updateModalBasedOnLight(){
@@ -472,6 +472,10 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
     }
     public fun moveForward(view: View){
         var resultString = "submit,"
+        if(selectedShades.size == 0){
+            showToast("Please select the shade before submitting")
+            return
+        }
         for (item in selectedShades){
             if(item!=null){
                 resultString = resultString.plus(item).plus(",")
