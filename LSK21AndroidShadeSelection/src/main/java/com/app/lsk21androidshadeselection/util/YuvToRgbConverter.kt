@@ -1,7 +1,12 @@
 package com.app.lsk21androidshadeselection.util
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageFormat
+import android.graphics.Rect
+import android.graphics.YuvImage
 import android.media.Image
+import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 
 class YuvToRgbConverter {
@@ -74,4 +79,29 @@ class YuvToRgbConverter {
         convert(yBuffer, uBuffer, vBuffer, width, height, bitmap)
         return bitmap
     }
+    private fun imageToBitmap1(image: Image): Bitmap {
+        val planes = image.planes
+        val yBuffer = planes[0].buffer
+        val uBuffer = planes[1].buffer
+        val vBuffer = planes[2].buffer
+
+        val ySize = yBuffer.remaining()
+        val uSize = uBuffer.remaining()
+        val vSize = vBuffer.remaining()
+
+        val nv21 = ByteArray(ySize + uSize + vSize)
+
+        // Fill NV21 byte array
+        yBuffer.get(nv21, 0, ySize)
+        uBuffer.get(nv21, ySize, uSize)
+        vBuffer.get(nv21, ySize + uSize, vSize)
+
+        return YuvImage(nv21, ImageFormat.NV21, image.width, image.height, null).let { yuvImage ->
+            ByteArrayOutputStream().use { stream ->
+                yuvImage.compressToJpeg(Rect(0, 0, image.width, image.height), 100, stream)
+                BitmapFactory.decodeByteArray(stream.toByteArray(), 0, stream.size())
+            }
+        }
+    }
+
 }

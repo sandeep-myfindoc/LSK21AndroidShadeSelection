@@ -1,6 +1,5 @@
 package com.app.lsk21androidshadeselection.network
 
-import android.app.Activity
 import android.os.AsyncTask
 import com.app.lsk21androidshadeselection.util.ResultReceiver
 import java.io.BufferedReader
@@ -12,19 +11,17 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 
-class UploadFileToServer(private val filePath: String,private val callBack: ResultReceiver) : AsyncTask<Unit, Unit, String>() {
+class UploadFileToServer(private val filePath: String, private val callBack: ResultReceiver) :
+    AsyncTask<Unit, Unit, String>() {
 
     override fun doInBackground(vararg params: Unit?): String? {
         val file = File(filePath)
         if (!file.exists()) return null // Check if file exists
         var dataOutputStream: DataOutputStream? = null
-        var response: String? = null
         try{
-
             val boundary = "*****"
             val lineEnd = "\r\n"
             val twoHyphens = "--"
-            //val url = URL("http://3.141.188.111:5000/shade_selection")
             val url = URL("http://3.141.188.111:5000/shade_selection")
             val connection = url.openConnection() as HttpURLConnection
             connection.doInput = true
@@ -32,9 +29,10 @@ class UploadFileToServer(private val filePath: String,private val callBack: Resu
             connection.requestMethod = "POST"
             connection.setRequestProperty("Connection", "Keep-Alive")
             connection.setRequestProperty("Content-Type", "multipart/form-data;boundary=$boundary")
-            connection.setRequestProperty("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNzE1MzIzMzcyLCJleHAiOjE3NDY4NTkzNzJ9.i0-Vdz3qjjMHcWhMVJS6nkLie8ov5FkckwsxOMl1xxw")
-
-
+            connection.setRequestProperty(
+                "Authorization",
+                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNzE1MzIzMzcyLCJleHAiOjE3NDY4NTkzNzJ9.i0-Vdz3qjjMHcWhMVJS6nkLie8ov5FkckwsxOMl1xxw"
+            )
             // Create a DataOutputStream to write the data to the server
             dataOutputStream = DataOutputStream(connection.outputStream)
             // Add file part
@@ -49,16 +47,12 @@ class UploadFileToServer(private val filePath: String,private val callBack: Resu
             while (inputStream.read(buffer).also { bytesRead = it } != -1) {
                 dataOutputStream.write(buffer, 0, bytesRead)
             }
-
             dataOutputStream.writeBytes(lineEnd)
             dataOutputStream.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd)
-
             // Close streams
             inputStream.close()
             dataOutputStream.flush()
             dataOutputStream.close()
-
-
             // Get response
             val responseCode = connection.responseCode
             val responseMessage = connection.responseMessage
@@ -70,17 +64,6 @@ class UploadFileToServer(private val filePath: String,private val callBack: Resu
             } else {
                 println("Upload failed: $responseCode $responseMessage")
             }
-
-            // Get the server response
-
-            /* return if (responseCode == HttpURLConnection.HTTP_OK) {
-                 // Read the response
-                 response = readStream(urlConnection.inputStream)
-                 return response
-                 urlConnection.inputStream.bufferedReader().use { it.readText() }
-             } else {
-                 null
-             }*/
         } catch (e: Exception) {
             e.printStackTrace()
             return null
