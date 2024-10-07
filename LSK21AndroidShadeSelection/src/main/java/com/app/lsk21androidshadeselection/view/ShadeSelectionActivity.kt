@@ -72,6 +72,8 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
     val renderableList = arrayListOf<ModelRenderable>()
     private  var base64: String? = null
     private var capturedBitmap: Bitmap? = null
+    private var modelIndex: Int  = 0
+    private var x: Float = -0.064f
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
@@ -82,27 +84,26 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
         try{
             var cnt = 1
             for(cnt in 1..5){
-                modelFiles.add(ModalToParse("modal/tab".plus("1.glb"),
+                modelFiles.add(ModalToParse("model/CB".plus(cnt).plus(".glb"),
                     "modal/textures/CB".plus(cnt).plus("_BaseColor.png")))
             }
             cnt = 1
             for(cnt in 1..7){
-                modelFiles.add(ModalToParse("modal/tab".plus("1.glb"),
+                modelFiles.add(ModalToParse("model/LS".plus(cnt).plus(".glb"),
                     "modal/textures/LS".plus(cnt).plus("_BaseColor.png")))
             }
             cnt = 1
             for(cnt in 1..5){
-                modelFiles.add(ModalToParse("modal/tab".plus("1.glb"),
+                modelFiles.add(ModalToParse("model/MS".plus(cnt).plus(".glb"),
                     "modal/textures/MS".plus(cnt).plus("_BaseColor.png")))
             }
             cnt = 1
             for(cnt in 1..3){
-                modelFiles.add(ModalToParse("modal/tab".plus("1.glb"),
+                modelFiles.add(ModalToParse("model/YS".plus(cnt).plus(".glb"),
                     "modal/textures/YS".plus(cnt).plus("_BaseColor.png")))
             }
             // Load 3D Modal
-            GlobalScope.launch(Dispatchers.Main){
-                var x: Float = -0.066f//-0.056f
+            /*GlobalScope.launch(Dispatchers.Main){
                 modelFiles.forEach { modelToParse ->
                     loadModelAsync(modelToParse.modelPath).thenAccept { renderable ->
                         loadTextureAsync(modelToParse.texturePath).thenAccept {texture->
@@ -133,12 +134,38 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
 
                     }
                 }
-            }
+            }*/
         }catch(ex: Exception){
             ex.printStackTrace()
         }
         //observeData()
         //updateModalBasedOnLight()
+        GlobalScope.launch(Dispatchers.Main) {
+            loadNextModel()
+        }
+    }
+    private fun loadNextModel() {
+        if (modelIndex < modelFiles.size) {
+            val modelData = modelFiles[modelIndex]
+            ModelRenderable.builder()
+                .setSource(this, RenderableSource.builder()
+                    .setSource(this, Uri.parse(modelData.modelPath), RenderableSource.SourceType.GLB)
+                    .build())
+                .build()
+                .thenAccept { renderable ->
+                    var temp = TransformableNode(arFragment.transformationSystem)
+                    modelNode[fetchCode(modelData.texturePath)] = temp
+                    renderableList.add(renderable)
+                    addModelToScene(renderable,x,temp)
+                    modelIndex++
+                    x += 0.0067f
+                    loadNextModel()
+                }
+                .exceptionally { throwable ->
+                    throwable.printStackTrace()
+                    null
+                }
+        }
     }
     private fun updateModalBasedOnLight(){
         arFragment.arSceneView.scene.addOnUpdateListener{frameTime->
