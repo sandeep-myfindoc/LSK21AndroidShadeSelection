@@ -28,9 +28,11 @@ import com.app.lsk21androidshadeselection.network.UploadFileToServer
 import com.app.lsk21androidshadeselection.util.ResultReceiver
 import com.app.lsk21androidshadeselection.util.YuvToRgbConverter
 import com.app.teethdetectioncameralibrary.viewModel.ShadeSelectionViewModel
+import com.google.ar.core.exceptions.DeadlineExceededException
 import com.google.ar.sceneform.AnchorNode
 import com.google.ar.sceneform.ArSceneView
 import com.google.ar.sceneform.Node
+import com.google.ar.sceneform.Scene
 import com.google.ar.sceneform.assets.RenderableSource
 import com.google.ar.sceneform.rendering.Color
 import com.google.ar.sceneform.rendering.Light
@@ -44,6 +46,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.json.JSONObject
@@ -397,7 +400,7 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
             }
         }
     }
-    public fun fetchShade(view: View) {
+    public fun fetchShade1(view: View) {
         if(selectedShades.size<=3){
             // Launch a coroutine
             CoroutineScope(Dispatchers.IO).launch {
@@ -429,6 +432,16 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
         }else{
             showToast("you already selected more than three tabs manually")
         }
+    }
+    public fun fetchShade(view: View) {
+        if(selectedShades.size<3){
+            arFragment.arSceneView.scene.addOnUpdateListener(updateListener)
+        }else{
+            showToast("you already selected more than three tabs manually")
+        }
+    }
+    private fun unRegisterUpdateListener(){
+        arFragment.arSceneView.scene.removeOnUpdateListener(updateListener)
     }
     private fun saveImage(bitmap: Bitmap?){
         val fileOutputStream: FileOutputStream
@@ -541,8 +554,9 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
     private suspend fun fetchBitMap(image: Image): Bitmap?{
         var bitmap: Bitmap? = null
         try{
-            val yuvConverter = YuvToRgbConverter()
-            bitmap = yuvConverter.imageToBitmap(image)
+            val yuvConverter = YuvToRgbConverter(this@ShadeSelectionActivity)
+            bitmap = Bitmap.createBitmap(image.width, image.height, Bitmap.Config.ARGB_8888)
+            yuvConverter.yuvToRgb(image, bitmap)
         }catch (ex: Exception){
             Log.e("Fail to create image :",ex.message.toString())
         }
@@ -605,7 +619,41 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
     }
 
     override fun onFailure(response: String) {
+        binding.txtMsg.visibility = View.GONE
+        binding.btnAiIcon.isEnabled = true
         showToast("Something went wrong please try again later..")
+    }
+    var updateListener = Scene.OnUpdateListener {frameTime ->
+        var image: Image? = null//capturedImage
+        try {
+            unRegisterUpdateListener()
+            val frame = arFragment.arSceneView.arFrame
+            if (frame != null) {
+                MainScope().launch {
+                    var bitmap: Bitmap? = null
+                    CoroutineScope(Dispatchers.IO).async {
+                        image = frame!!.acquireCameraImage()
+                        if (image != null) {
+                            bitmap = fetchBitMap(image!!)
+                        }
+                    }.await()
+                    if (bitmap != null) {
+                        base64 = bitmapToBase64(bitmap!!)
+                        binding.txtMsg.visibility = View.VISIBLE
+                        binding.btnAiIcon.isEnabled = false
+                        saveImage(bitmap!!)
+
+                    }
+                }
+            }
+        } catch (ex: DeadlineExceededException) {
+            binding.btnAiIcon.isEnabled = true
+            Log.e("Dead Line Exp: ", ex.message.toString())
+        } catch (ex: Exception) {
+            Log.e("Fail to Create Bitmap: ", ex.message.toString())
+        } finally {
+            image?.close()
+        }
     }
 }
 
