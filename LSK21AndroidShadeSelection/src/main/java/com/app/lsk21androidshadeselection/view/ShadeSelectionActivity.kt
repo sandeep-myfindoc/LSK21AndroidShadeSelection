@@ -68,7 +68,7 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
     private val yAxis = -0.034f
     private val shiftYAxis: Float = 0.011f
     private val minScale: Float = 0.05f
-    private val maxScale: Float = 1.15f
+    private val maxScale: Float = 1.35f
     private val zoomAbleScale: Float = 1.6f
     private lateinit var viewModel: ShadeSelectionViewModel
     val modelNode: HashMap<String, TransformableNode> = HashMap()
@@ -76,7 +76,8 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
     private  var base64: String? = null
     private var capturedBitmap: Bitmap? = null
     private var modelIndex: Int  = 0
-    private var x: Float = -0.061f
+    private var x: Float = -0.064f
+    private val width = 0.0075f
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
@@ -161,7 +162,7 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
                     renderableList.add(renderable)
                     addModelToScene(renderable,x,temp)
                     modelIndex++
-                    x += 0.0063f
+                    x += width
                     loadNextModel()
                 }
                 .exceptionally { throwable ->
@@ -527,6 +528,26 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
         resultIntent.putExtra("data",resultString)
         setResult(Activity.RESULT_OK,resultIntent)
         finish()
+    }
+    public fun moveLeft(view: View){
+        for ((key, node) in modelNode) {
+            node.localPosition = com.google.ar.sceneform.math.Vector3(
+                node.localPosition.x-(width*1),
+                node.localPosition.y +0.0f,
+                node.localPosition.z + 0.0f
+            )
+
+        }
+    }
+    public fun moveRight(view: View){
+        for ((key, node) in modelNode) {
+            node.localPosition = com.google.ar.sceneform.math.Vector3(
+                node.localPosition.x+(width*1),
+                node.localPosition.y +0.0f,
+                node.localPosition.z + 0.0f
+            )
+
+        }
     }
     private fun bitmapToBase64(bitmap: Bitmap): String {
         val byteArrayOutputStream = ByteArrayOutputStream()
