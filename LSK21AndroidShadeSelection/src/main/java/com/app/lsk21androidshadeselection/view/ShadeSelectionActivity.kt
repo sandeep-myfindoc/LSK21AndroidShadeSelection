@@ -65,7 +65,7 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
     private lateinit var arFragment: ArFragment
     private val modelFiles = arrayListOf<ModalToParse>()
     private val selectedShades = arrayListOf<String>()
-    private val yAxis = -0.040f
+    private val yAxis = -0.033f
     private val shiftYAxis: Float = 0.011f
     private val minScale: Float = 0.05f
     private val maxScale: Float = 1.15f
@@ -76,7 +76,7 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
     private  var base64: String? = null
     private var capturedBitmap: Bitmap? = null
     private var modelIndex: Int  = 0
-    private var x: Float = -0.064f
+    private var x: Float = -0.061f
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
@@ -161,7 +161,7 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
                     renderableList.add(renderable)
                     addModelToScene(renderable,x,temp)
                     modelIndex++
-                    x += 0.0067f
+                    x += 0.0063f
                     loadNextModel()
                 }
                 .exceptionally { throwable ->
@@ -565,7 +565,7 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
 
     override fun onSucess(response: String) {
         binding.txtMsg.visibility = View.GONE
-        writeFileToMediaStore("Report.txt", response.toString())
+//        writeFileToMediaStore("Report.txt", response.toString())
         //val res = Gson().fromJson<AIResponse>(response.toString(),object : TypeToken<AIResponse>() {}.type)
         val jsonObject = JSONObject(response.toString())
         if(jsonObject.getString("status").equals("1")){

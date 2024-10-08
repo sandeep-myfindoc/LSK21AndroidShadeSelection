@@ -36,7 +36,7 @@
             android:layout_height="match_parent">
         </ImageView>-->
 
-        <ImageView
+        <!--<ImageView
             android:id="@+id/btnAiIcon"
             android:src="@drawable/ai_icon"
             android:onClick="fetchShade"
@@ -45,7 +45,7 @@
             android:layout_alignParentRight="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
-        </ImageView>
+        </ImageView>-->
         <RelativeLayout
             android:layout_marginTop="25dp"
             android:layout_marginRight="15dp"
@@ -67,7 +67,7 @@
                     android:layout_height="wrap_content">
                 </ImageView>
             </LinearLayout>
-            <Button
+            <!--<Button
                 android:layout_centerVertical="true"
                 android:id="@+id/btnSubmit"
                 android:layout_width="wrap_content"
@@ -84,19 +84,20 @@
                 android:background="#0099FF"
                 >
 
-            </Button>
-            <!--<ImageView
+            </Button>-->
+            <ImageView
                 android:id="@+id/btnSubmit"
                 android:visibility="invisible"
                 android:onClick="moveForward"
                 android:src="@drawable/submit_button"
-                android:layout_marginTop="20dp"
+                android:layout_centerVertical="true"
                 android:layout_centerHorizontal="true"
-                and roid:layout_alignParentTop="true"
+                android:layout_alignParentTop="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
-            </ImageView>-->
-            <!--<ImageView
+            </ImageView>
+            <ImageView
+                android:layout_centerVertical="true"
                 android:id="@+id/btnAiIcon"
                 android:src="@drawable/ai_icon"
                 android:onClick="fetchShade"
@@ -104,7 +105,7 @@
                 android:layout_alignParentRight="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
-            </ImageView>-->
+            </ImageView>
         </RelativeLayout>
 
     </RelativeLayout>
