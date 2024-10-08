@@ -65,7 +65,7 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
     private lateinit var arFragment: ArFragment
     private val modelFiles = arrayListOf<ModalToParse>()
     private val selectedShades = arrayListOf<String>()
-    private val yAxis = -0.033f
+    private val yAxis = -0.034f
     private val shiftYAxis: Float = 0.011f
     private val minScale: Float = 0.05f
     private val maxScale: Float = 1.15f
@@ -400,7 +400,7 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
             }
         }
     }
-    public fun fetchShade1(view: View) {
+    public fun fetchShade(view: View) {
         if(selectedShades.size<=3){
             // Launch a coroutine
             CoroutineScope(Dispatchers.IO).launch {
@@ -430,11 +430,11 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
             }
 
         }else{
-            showToast("you already selected more than three tabs manually")
+            showToast("you have already selected more than three tabs manually")
         }
     }
-    public fun fetchShade(view: View) {
-        if(selectedShades.size<3){
+    public fun fetchShade1(view: View) {
+        if(selectedShades.size<=3){
             arFragment.arSceneView.scene.addOnUpdateListener(updateListener)
         }else{
             showToast("you already selected more than three tabs manually")
