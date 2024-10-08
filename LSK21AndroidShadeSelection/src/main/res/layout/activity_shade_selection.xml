@@ -47,6 +47,7 @@
             android:layout_height="wrap_content">
         </ImageView>-->
         <RelativeLayout
+            android:id="@+id/layoutButtons"
             android:layout_marginTop="25dp"
             android:layout_marginRight="15dp"
             android:layout_alignParentTop="true"
@@ -107,6 +108,46 @@
                 android:layout_height="wrap_content">
             </ImageView>
         </RelativeLayout>
+        <LinearLayout
+            android:layout_below="@id/layoutButtons"
+            android:layout_marginTop="25dp"
+            android:layout_marginRight="20dp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:layout_marginRight="10dp"
+                android:id="@+id/layoutBackward"
+                android:clickable="true"
+                android:onClick="moveLeft"
+                android:gravity="center"
+                android:background="#0099FF"
+                android:layout_width="45dp"
+                android:layout_height="45dp">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/backward"></ImageView>
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/layoutForward"
+                android:clickable="true"
+                android:onClick="moveRight"
+                android:gravity="center"
+                android:background="#0099FF"
+                android:layout_width="45dp"
+                android:layout_height="45dp">
+                <ImageView
+                    android:src="@drawable/forward"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                </ImageView>
+            </LinearLayout>
+        </LinearLayout>
+
 
     </RelativeLayout>
 </layout>
