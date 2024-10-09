@@ -48,8 +48,9 @@
         </ImageView>-->
         <RelativeLayout
             android:id="@+id/layoutButtons"
-            android:layout_marginTop="25dp"
-            android:layout_marginRight="15dp"
+            android:layout_marginTop="30dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="20dp"
             android:layout_alignParentTop="true"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
@@ -60,33 +61,33 @@
                 android:onClick="moveBack"
                 android:gravity="center"
                 android:layout_alignParentLeft="true"
-                android:layout_width="60dp"
-                android:layout_height="60dp">
+                android:layout_width="50dp"
+                android:layout_height="50dp">
                 <ImageView
                     android:src="@drawable/back_icon"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content">
                 </ImageView>
             </LinearLayout>
-            <!--<Button
+            <Button
                 android:layout_centerVertical="true"
                 android:id="@+id/btnSubmit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="10dp"
-                android:paddingLeft="6dp"
-                android:paddingRight="6dp"
+                android:paddingLeft="3dp"
+                android:paddingRight="3dp"
                 android:layout_alignParentRight="true"
                 android:text="Submit"
+                android:textSize="17dp"
+                android:textAllCaps="false"
                 android:textStyle="bold"
                 android:visibility="invisible"
                 android:onClick="moveForward"
                 android:textColor="#ffffff"
-                android:background="#0099FF"
+                android:background="#92AEC4"
                 >
-
-            </Button>-->
-            <ImageView
+            </Button>
+            <!--<ImageView
                 android:id="@+id/btnSubmit"
                 android:visibility="invisible"
                 android:onClick="moveForward"
@@ -96,58 +97,60 @@
                 android:layout_alignParentTop="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
-            </ImageView>
+            </ImageView>-->
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_marginTop="20dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:layout_below="@id/layoutButtons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:layout_centerVertical="true"
+                android:layout_alignParentLeft="true"
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+                <LinearLayout
+                    android:layout_marginRight="10dp"
+                    android:id="@+id/layoutBackward"
+                    android:clickable="true"
+                    android:onClick="moveLeft"
+                    android:gravity="center"
+                    android:background="#92AEC4"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/backward"></ImageView>
+                </LinearLayout>
+                <LinearLayout
+                    android:id="@+id/layoutForward"
+                    android:clickable="true"
+                    android:onClick="moveRight"
+                    android:gravity="center"
+                    android:background="#92AEC4"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp">
+                    <ImageView
+                        android:src="@drawable/forward"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content">
+                    </ImageView>
+                </LinearLayout>
+            </LinearLayout>
             <ImageView
                 android:layout_centerVertical="true"
                 android:id="@+id/btnAiIcon"
                 android:src="@drawable/ai_icon"
                 android:onClick="fetchShade"
-                android:layout_marginRight="10dp"
                 android:layout_alignParentRight="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
             </ImageView>
         </RelativeLayout>
-        <LinearLayout
-            android:layout_below="@id/layoutButtons"
-            android:layout_marginTop="25dp"
-            android:layout_marginRight="20dp"
-            android:layout_centerVertical="true"
-            android:layout_alignParentRight="true"
-            android:orientation="horizontal"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-            <LinearLayout
-                android:layout_marginRight="10dp"
-                android:id="@+id/layoutBackward"
-                android:clickable="true"
-                android:onClick="moveLeft"
-                android:gravity="center"
-                android:background="#0099FF"
-                android:layout_width="45dp"
-                android:layout_height="45dp">
-
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/backward"></ImageView>
-            </LinearLayout>
-            <LinearLayout
-                android:id="@+id/layoutForward"
-                android:clickable="true"
-                android:onClick="moveRight"
-                android:gravity="center"
-                android:background="#0099FF"
-                android:layout_width="45dp"
-                android:layout_height="45dp">
-                <ImageView
-                    android:src="@drawable/forward"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content">
-                </ImageView>
-            </LinearLayout>
-        </LinearLayout>
-
-
     </RelativeLayout>
 </layout>
