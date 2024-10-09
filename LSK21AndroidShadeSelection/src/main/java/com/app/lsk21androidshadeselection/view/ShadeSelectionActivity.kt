@@ -85,6 +85,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         viewModel = ViewModelProvider(this).get(ShadeSelectionViewModel::class.java)
         arFragment.planeDiscoveryController.hide()
         arFragment.planeDiscoveryController.setInstructionView(null)
+        arFragment.arSceneView.planeRenderer.isVisible = false
         try{
             var cnt = 1
             for(cnt in 1..5){
@@ -148,6 +149,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             binding.btnAiIcon.isEnabled = false
             loadNextModel()
         }
+        //arFragment.transformationSystem.selectionVisualizer = BlanckSelectionVisualizer()
     }
     private fun loadNextModel() {
         if (modelIndex < modelFiles.size) {
@@ -171,7 +173,9 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                     null
                 }
         }else{
-            binding.btnAiIcon.isEnabled = true
+            Handler().postDelayed({
+                binding.btnAiIcon.isEnabled = true
+            }, 1500)
         }
     }
     private fun updateModalBasedOnLight(){
@@ -320,6 +324,9 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         modelNodeTemp.scaleController.maxScale = maxScale
         modelNodeTemp.localScale = com.google.ar.sceneform.math.Vector3(1.0f, 1.0f, 1.0f)
         modelNodeTemp.light = addPointLight()
+        /*if(modelNodeTemp.isSelected){
+            modelNodeTemp.transformationSystem.selectNode(null)
+        }*/
         arFragment.arSceneView.setOnTouchListener{ _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
                 handleTouch(event)
@@ -678,6 +685,20 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         } finally {
             image?.close()
         }
+    }
+    /*class BlanckSelectionVisualizer : SelectionVisualizer {
+        override fun applySelectionVisual(var1: BaseTransformableNode) {}
+        override fun removeSelectionVisual(var1: BaseTransformableNode) {}
+    }*/
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        val resultIntent = Intent()
+        val resultString = "back,backbuton"
+        resultIntent.putExtra("data",resultString)
+        setResult(Activity.RESULT_CANCELED,resultIntent)
+        finish()
+
     }
 }
 
