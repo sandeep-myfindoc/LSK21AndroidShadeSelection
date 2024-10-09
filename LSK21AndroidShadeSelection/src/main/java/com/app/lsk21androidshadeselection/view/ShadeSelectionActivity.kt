@@ -60,7 +60,7 @@ import java.util.concurrent.CompletableFuture
 import kotlin.math.min
 
 
-class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
+class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private lateinit var binding:ActivityShadeSelectionBinding
     private lateinit var arFragment: ArFragment
     private val modelFiles = arrayListOf<ModalToParse>()
@@ -77,7 +77,7 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
     private var capturedBitmap: Bitmap? = null
     private var modelIndex: Int  = 0
     private var x: Float = -0.064f
-    private val width = 0.0075f
+    private val width = 0.0077f
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
@@ -145,6 +145,7 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
         //observeData()
         //updateModalBasedOnLight()
         GlobalScope.launch(Dispatchers.Main) {
+            binding.btnAiIcon.isEnabled = false
             loadNextModel()
         }
     }
@@ -169,6 +170,8 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
                     throwable.printStackTrace()
                     null
                 }
+        }else{
+            binding.btnAiIcon.isEnabled = true
         }
     }
     private fun updateModalBasedOnLight(){
@@ -401,7 +404,7 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
             }
         }
     }
-    public fun fetchShade(view: View) {
+    public fun fetchShade1(view: View) {
         if(selectedShades.size<=3){
             // Launch a coroutine
             CoroutineScope(Dispatchers.IO).launch {
@@ -411,7 +414,7 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
                         binding.txtMsg.visibility = View.VISIBLE
                         binding.btnAiIcon.isEnabled = false
                     }
-                    base64 = bitmapToBase64(capturedBitmap!!)
+                    //base64 = bitmapToBase64(capturedBitmap!!)
                     saveImage(capturedBitmap!!)
 
                 }else{
@@ -419,22 +422,13 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
                         Toast.makeText(this@ShadeSelectionActivity,"Fail to Process Bitmap",Toast.LENGTH_LONG).show()
                     }
                 }
-                /*withContext(Dispatchers.Main) {
-                    if (result == PixelCopy.SUCCESS && capturedBitmap!=null) {
-                        base64 = bitmapToBase64(capturedBitmap!!)
-                        saveImage(capturedBitmap!!)
-                        Toast.makeText(this@ShadeSelectionActivity,"Process Bitmap",Toast.LENGTH_LONG).show()
-                    } else {
-                        Toast.makeText(this@ShadeSelectionActivity,"Fail to Process Bitmap",Toast.LENGTH_LONG).show()
-                    }
-                }*/
             }
 
         }else{
             showToast("you have already selected more than three tabs manually")
         }
     }
-    public fun fetchShade1(view: View) {
+    public fun fetchShade(view: View) {
         if(selectedShades.size<=3){
             arFragment.arSceneView.scene.addOnUpdateListener(updateListener)
         }else{
@@ -460,9 +454,6 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-    private fun showToast(msg: String){
-        Toast.makeText(this@ShadeSelectionActivity,msg, Toast.LENGTH_SHORT).show()
     }
     private fun fetchCode(texturePath: String):String{
         var ar = texturePath.split('_')
@@ -517,17 +508,28 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
             showToast("Please select the shade before submitting")
             return
         }
-        for (item in selectedShades){
-            if(item!=null){
-                resultString = resultString.plus(item).plus(",")
+        showProgressBar()
+        CoroutineScope(Dispatchers.IO).launch {
+            val result = copyPixels()
+            if(result==PixelCopy.SUCCESS && capturedBitmap!=null){
+                base64 = bitmapToBase64(capturedBitmap!!)
+                hideProgressBar()
+                for (item in selectedShades){
+                    if(item!=null){
+                        resultString = resultString.plus(item).plus(",")
+                    }
+                }
+                resultString.plus(base64)
+                val resultIntent = Intent()
+                resultString = resultString.plus(base64)
+                resultIntent.putExtra("data",resultString)
+                setResult(Activity.RESULT_OK,resultIntent)
+                finish()
+            }else{
+                runOnUiThread {
+                }
             }
         }
-        resultString.plus(base64)
-        val resultIntent = Intent()
-        resultString = resultString.plus(base64)
-        resultIntent.putExtra("data",resultString)
-        setResult(Activity.RESULT_OK,resultIntent)
-        finish()
     }
     public fun moveLeft(view: View){
         for ((key, node) in modelNode) {
@@ -645,9 +647,9 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
         showToast("Something went wrong please try again later..")
     }
     var updateListener = Scene.OnUpdateListener {frameTime ->
+        unRegisterUpdateListener()
         var image: Image? = null//capturedImage
         try {
-            unRegisterUpdateListener()
             val frame = arFragment.arSceneView.arFrame
             if (frame != null) {
                 MainScope().launch {
@@ -656,10 +658,11 @@ class ShadeSelectionActivity : AppCompatActivity(),ResultReceiver {
                         image = frame!!.acquireCameraImage()
                         if (image != null) {
                             bitmap = fetchBitMap(image!!)
+                            image!!.close()
                         }
                     }.await()
                     if (bitmap != null) {
-                        base64 = bitmapToBase64(bitmap!!)
+                        //base64 = bitmapToBase64(bitmap!!)
                         binding.txtMsg.visibility = View.VISIBLE
                         binding.btnAiIcon.isEnabled = false
                         saveImage(bitmap!!)
