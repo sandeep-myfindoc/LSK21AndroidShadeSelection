@@ -3,6 +3,7 @@ package com.app.lsk21androidshadeselection.view
 import android.app.Activity
 import android.content.ContentValues
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.media.Image
 import android.net.Uri
@@ -17,6 +18,7 @@ import android.view.PixelCopy
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -28,6 +30,8 @@ import com.app.lsk21androidshadeselection.network.UploadFileToServer
 import com.app.lsk21androidshadeselection.util.ResultReceiver
 import com.app.lsk21androidshadeselection.util.YuvToRgbConverter
 import com.app.teethdetectioncameralibrary.viewModel.ShadeSelectionViewModel
+import com.google.ar.core.Config
+import com.google.ar.core.Session
 import com.google.ar.core.exceptions.DeadlineExceededException
 import com.google.ar.sceneform.AnchorNode
 import com.google.ar.sceneform.ArSceneView
@@ -66,10 +70,10 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private val modelFiles = arrayListOf<ModalToParse>()
     private val selectedShades = arrayListOf<String>()
     private val yAxis = -0.034f
-    private val shiftYAxis: Float = 0.011f
+    private val shiftYAxis: Float = 0.004f
     private val minScale: Float = 0.05f
     private val maxScale: Float = 1.35f
-    private val zoomAbleScale: Float = 1.6f
+    private val zoomAbleScale: Float = 1.85f
     private lateinit var viewModel: ShadeSelectionViewModel
     val modelNode: HashMap<String, TransformableNode> = HashMap()
     val renderableList = arrayListOf<ModelRenderable>()
@@ -77,7 +81,8 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private var capturedBitmap: Bitmap? = null
     private var modelIndex: Int  = 0
     private var x: Float = -0.064f
-    private val width = 0.0077f
+    private val width = 0.0085f
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
@@ -86,6 +91,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         arFragment.planeDiscoveryController.hide()
         arFragment.planeDiscoveryController.setInstructionView(null)
         arFragment.arSceneView.planeRenderer.isVisible = false
+        checkPermission()
         try{
             var cnt = 1
             for(cnt in 1..5){
@@ -151,6 +157,11 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         }
         //arFragment.transformationSystem.selectionVisualizer = BlanckSelectionVisualizer()
     }
+    private fun checkPermission(){
+        if(ContextCompat.checkSelfPermission(this@ShadeSelectionActivity,android.Manifest.permission.CAMERA)==PackageManager.PERMISSION_GRANTED){
+            setupCameraFocusMode()
+        }
+    }
     private fun loadNextModel() {
         if (modelIndex < modelFiles.size) {
             val modelData = modelFiles[modelIndex]
@@ -160,6 +171,10 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                     .build())
                 .build()
                 .thenAccept { renderable ->
+                    /*val ambientColor = Color(1.0f, 1.0f, 1.0f)
+                    renderable.material.setFloat("metallic", 1.0f);
+                    renderable.material.setFloat("roughness", 0.1f);
+                    renderable?.material?.setFloat3("ambientColor", ambientColor)*/
                     var temp = TransformableNode(arFragment.transformationSystem)
                     modelNode[fetchCode(modelData.texturePath)] = temp
                     renderableList.add(renderable)
@@ -378,14 +393,14 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             //.setColor(Color(1.0f,1.0f,1.0f))
             //.setColorTemperature(2000f)
             //.setShadowCastingEnabled(true)
-            .setIntensity(100f)
+            .setIntensity(750f)
             .setFalloffRadius(2.0f)
             .build()
         return pointLight
-        /*val lightNode = Node()
+        val lightNode = Node()
         lightNode.light = pointLight
-        lightNode.worldPosition = Vector3(1f,0f,0f)
-        lightNode.setParent(arFragment.arSceneView.scene)*/
+        //lightNode.worldPosition = Vector3(1f,0f,0f)
+        lightNode.setParent(arFragment.arSceneView.scene)
     }
     private fun onModelClicked(node: TransformableNode) {
         if (node != null) {
@@ -686,6 +701,15 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             image?.close()
         }
     }
+    private fun setupCameraFocusMode() {
+        val session = Session(this@ShadeSelectionActivity)
+        val config = Config(session)
+        config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
+        // config.focusMode = Config.FocusMode.FIXED
+        config.focusMode = Config.FocusMode.AUTO
+        session.configure(config)
+        arFragment.arSceneView.setupSession(session)
+    }
     /*class BlanckSelectionVisualizer : SelectionVisualizer {
         override fun applySelectionVisual(var1: BaseTransformableNode) {}
         override fun removeSelectionVisual(var1: BaseTransformableNode) {}
@@ -700,6 +724,18 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         finish()
 
     }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if(grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+            setupCameraFocusMode()
+        }
+    }
+
 }
 
 
