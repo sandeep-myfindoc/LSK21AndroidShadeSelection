@@ -82,7 +82,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private var modelIndex: Int  = 0
     private var x: Float = -0.064f
     private val width = 0.0085f
-
+    private var cntOfMannualSelection: Int = 0
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
@@ -393,7 +393,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             //.setColor(Color(1.0f,1.0f,1.0f))
             //.setColorTemperature(2000f)
             //.setShadowCastingEnabled(true)
-            .setIntensity(750f)
+            .setIntensity(600f)
             .setFalloffRadius(2.0f)
             .build()
         return pointLight
@@ -408,6 +408,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             if(node.localPosition.y == yAxis+shiftYAxis){
                 if(shadeCode!=null){
                     selectedShades.remove(shadeCode)
+                    cntOfMannualSelection--
                     if(selectedShades.size==0){
                         binding.btnAiIcon.isEnabled = true
                     }
@@ -416,9 +417,13 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
 
                 return
             }
+            if(cntOfMannualSelection==3){
+                return
+            }
             if(selectedShades.size<6){
                 if(shadeCode!=null){
                     selectedShades.add(shadeCode)
+                    cntOfMannualSelection++
                     shiftYAxis(node)
                 }
             }else{
@@ -451,11 +456,20 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         }
     }
     public fun fetchShade(view: View) {
-        if(selectedShades.size<=3){
+        for ((key, node) in modelNode) {
+            if(selectedShades.contains(key)){
+                placeAtYAxis(node)
+                selectedShades.remove(key)
+            }
+        }
+        cntOfMannualSelection = 0
+        binding.btnSubmit.visibility = View.GONE
+        arFragment.arSceneView.scene.addOnUpdateListener(updateListener)
+        /*if(selectedShades.size<=3){
             arFragment.arSceneView.scene.addOnUpdateListener(updateListener)
         }else{
             showToast("you already selected more than three tabs manually")
-        }
+        }*/
     }
     private fun unRegisterUpdateListener(){
         arFragment.arSceneView.scene.removeOnUpdateListener(updateListener)
@@ -635,32 +649,12 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             }
             binding.btnSubmit.visibility = View.VISIBLE
             binding.txtMsg.visibility = View.GONE
+            binding.btnAiIcon.isEnabled = true
         }else{
             binding.btnAiIcon.isEnabled = true
             showToast(jsonObject.getString("message"))
             binding.txtMsg.visibility = View.GONE
         }
-        /*if(res!=null && res.status.toString().equals("1")){
-            if(res?.colorRecommendation!=null && res?.colorRecommendation?.color1!=null){
-                selectedShades.add(res.colorRecommendation.color1.shadeCode)
-                updateOnBasisOfShadeCode(res.colorRecommendation.color1.shadeCode)
-            }
-            if(res?.colorRecommendation!=null && res?.colorRecommendation?.color2!=null){
-                selectedShades.add(res.colorRecommendation.color2.shadeCode)
-                updateOnBasisOfShadeCode(res.colorRecommendation.color2.shadeCode)
-            }
-            if(res?.colorRecommendation!=null && res?.colorRecommendation?.color3!=null){
-                selectedShades.add(res.colorRecommendation.color3.shadeCode)
-                updateOnBasisOfShadeCode(res.colorRecommendation.color3.shadeCode)
-            }
-            binding.btnSubmit.visibility = View.VISIBLE
-            binding.txtMsg.visibility = View.GONE
-        }
-        else{
-            binding.btnAiIcon.isEnabled = true
-            showToast(res?.message.toString())
-            binding.txtMsg.visibility = View.GONE
-        }*/
     }
 
     override fun onFailure(response: String) {
