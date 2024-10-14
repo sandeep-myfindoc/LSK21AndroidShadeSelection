@@ -352,6 +352,8 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private fun handleTouch(event: MotionEvent) {
         val hitTestResult = arFragment.arSceneView.scene.hitTest(event)
         if(hitTestResult.node!=null){
+            if(!binding.btnAiIcon.isEnabled)
+                return
             onModelClicked(hitTestResult.node!! as TransformableNode)
         }
 
@@ -393,7 +395,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             //.setColor(Color(1.0f,1.0f,1.0f))
             //.setColorTemperature(2000f)
             //.setShadowCastingEnabled(true)
-            .setIntensity(600f)
+            .setIntensity(550f)
             .setFalloffRadius(2.0f)
             .build()
         return pointLight
@@ -594,9 +596,17 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         return Base64.encodeToString(byteArray, Base64.NO_WRAP) // Use NO_WRAP to avoid newlines
     }
     private fun getCurrentTimeInHHmm(): String {
-        val calendar = Calendar.getInstance()
-        val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-        return dateFormat.format(calendar.time)
+        try {
+            val calendar = Calendar.getInstance()
+            val dateFormat = SimpleDateFormat(
+                "dd_MMMM_yyyy_HH:mm",
+                Locale.getDefault()
+            )//    "dd/MMMM/yyyy HH:mm"
+            return dateFormat.format(calendar.time)
+        }catch(ex: Exception){
+            return ""
+            ex.printStackTrace()
+        }
     }
     private suspend fun copyPixels(): Int {
         val view: ArSceneView = arFragment.arSceneView
@@ -786,3 +796,5 @@ try {
             }
         }, Handler(Looper.getMainLooper()))
     }*/
+//https://developers.google.com/sceneform/reference/com/google/ar/sceneform/rendering/MaterialFactory
+//https://github.com/googlesamples/sceneform-samples/tree/master
