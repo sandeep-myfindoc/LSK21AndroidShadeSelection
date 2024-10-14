@@ -29,14 +29,14 @@ class UploadFileToServer(private val filePath: String, private val callBack: Res
             connection.requestMethod = "POST"
             connection.setRequestProperty("Connection", "Keep-Alive")
             connection.setRequestProperty("Content-Type", "multipart/form-data;boundary=$boundary")
-            connection.setRequestProperty(
-                "Authorization",
-                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiaWF0IjoxNzI4NTYyNTI1LCJleHAiOjE3NjAwOTg1MjV9.epfKv20ORvfCDThnriUEWCHpnNJt9wo9z5rGQPHcCRA"
-            )
             /*connection.setRequestProperty(
                 "Authorization",
-                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNzE1MzIzMzcyLCJleHAiOjE3NDY4NTkzNzJ9.i0-Vdz3qjjMHcWhMVJS6nkLie8ov5FkckwsxOMl1xxw"
+                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwiaWF0IjoxNzI4NTYyNTI1LCJleHAiOjE3NjAwOTg1MjV9.epfKv20ORvfCDThnriUEWCHpnNJt9wo9z5rGQPHcCRA"
             )*/
+            connection.setRequestProperty(
+                "Authorization",
+                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNzE1MzIzMzcyLCJleHAiOjE3NDY4NTkzNzJ9.i0-Vdz3qjjMHcWhMVJS6nkLie8ov5FkckwsxOMl1xxw"
+            )
             // Create a DataOutputStream to write the data to the server
             dataOutputStream = DataOutputStream(connection.outputStream)
             // Add file part
