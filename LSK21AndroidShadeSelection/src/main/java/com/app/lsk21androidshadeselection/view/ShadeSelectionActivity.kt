@@ -5,6 +5,10 @@ import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.media.Image
 import android.net.Uri
 import android.os.Bundle
@@ -17,7 +21,6 @@ import android.view.MotionEvent
 import android.view.PixelCopy
 import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
@@ -25,7 +28,6 @@ import androidx.lifecycle.ViewModelProvider
 import com.app.lsk21androidshadeselection.R
 import com.app.lsk21androidshadeselection.databinding.ActivityShadeSelectionBinding
 import com.app.lsk21androidshadeselection.modal.ModalToParse
-import com.app.lsk21androidshadeselection.modal.airesponse_modal.AIResponse
 import com.app.lsk21androidshadeselection.network.UploadFileToServer
 import com.app.lsk21androidshadeselection.util.ResultReceiver
 import com.app.lsk21androidshadeselection.util.YuvToRgbConverter
@@ -33,6 +35,7 @@ import com.app.teethdetectioncameralibrary.viewModel.ShadeSelectionViewModel
 import com.google.ar.core.Config
 import com.google.ar.core.Session
 import com.google.ar.core.exceptions.DeadlineExceededException
+import com.google.ar.core.exceptions.NotYetAvailableException
 import com.google.ar.sceneform.AnchorNode
 import com.google.ar.sceneform.ArSceneView
 import com.google.ar.sceneform.Node
@@ -44,8 +47,6 @@ import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.ar.sceneform.rendering.Texture
 import com.google.ar.sceneform.ux.ArFragment
 import com.google.ar.sceneform.ux.TransformableNode
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -69,20 +70,22 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private lateinit var arFragment: ArFragment
     private val modelFiles = arrayListOf<ModalToParse>()
     private val selectedShades = arrayListOf<String>()
-    private val yAxis = -0.034f
+    private val yAxis = -0.038f
     private val shiftYAxis: Float = 0.004f
     private val minScale: Float = 0.05f
-    private val maxScale: Float = 1.35f
-    private val zoomAbleScale: Float = 1.85f
+    private val maxScale: Float = 1.65f
+    private val zoomAbleScale: Float = 2.02f
     private lateinit var viewModel: ShadeSelectionViewModel
     val modelNode: HashMap<String, TransformableNode> = HashMap()
     val renderableList = arrayListOf<ModelRenderable>()
     private  var base64: String? = null
-    private var capturedBitmap: Bitmap? = null
     private var modelIndex: Int  = 0
-    private var x: Float = -0.064f
+    private var x: Float = -0.066f
     private val width = 0.0085f
     private var cntOfMannualSelection: Int = 0
+    private var mSensorManager: SensorManager? = null
+    private var mLightSensor: Sensor? = null
+    private var mLightQuantity = 0f
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
@@ -155,8 +158,17 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             binding.btnAiIcon.isEnabled = false
             loadNextModel()
         }
-        //arFragment.transformationSystem.selectionVisualizer = BlanckSelectionVisualizer()
+        updateModalWithLight()
+        //arFragment.arSceneView.scene.sunlight?.light?.intensity = 700f
+    //arFragment.transformationSystem.selectionVisualizer = BlanckSelectionVisualizer()
     }
+    private fun updateModalWithLight(){
+        mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+        mLightSensor = mSensorManager?.getDefaultSensor(Sensor.TYPE_LIGHT);
+        mSensorManager?.registerListener(sensorListener,mLightSensor,SensorManager.SENSOR_DELAY_FASTEST)
+
+    }
+
     private fun checkPermission(){
         if(ContextCompat.checkSelfPermission(this@ShadeSelectionActivity,android.Manifest.permission.CAMERA)==PackageManager.PERMISSION_GRANTED){
             setupCameraFocusMode()
@@ -338,7 +350,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         modelNodeTemp.scaleController.minScale = minScale
         modelNodeTemp.scaleController.maxScale = maxScale
         modelNodeTemp.localScale = com.google.ar.sceneform.math.Vector3(1.0f, 1.0f, 1.0f)
-        modelNodeTemp.light = addPointLight()
+        //modelNodeTemp.light = addPointLight()
         /*if(modelNodeTemp.isSelected){
             modelNodeTemp.transformationSystem.selectNode(null)
         }*/
@@ -390,15 +402,15 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         val floatArray: Array<Float> = arrayOf(averageRed.toFloat(), averageGreen.toFloat(), averageBlue.toFloat())
         return floatArray
     }
-    private fun addPointLight(): Light {//temp: FloatArray
-        var pointLight = Light.builder(Light.Type.DIRECTIONAL)
+    private fun addPointLight(intensity: Float){//: Light {//temp: FloatArray
+        var pointLight = Light.builder(Light.Type.POINT)
             //.setColor(Color(1.0f,1.0f,1.0f))
             //.setColorTemperature(2000f)
             //.setShadowCastingEnabled(true)
-            .setIntensity(550f)
-            .setFalloffRadius(2.0f)
+            .setIntensity(intensity)
+            //.setFalloffRadius(2.0f)
             .build()
-        return pointLight
+        //return pointLight
         val lightNode = Node()
         lightNode.light = pointLight
         //lightNode.worldPosition = Vector3(1f,0f,0f)
@@ -434,27 +446,29 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         }
     }
     public fun fetchShade1(view: View) {
-        if(selectedShades.size<=3){
-            // Launch a coroutine
-            CoroutineScope(Dispatchers.IO).launch {
-                val result = copyPixels()
-                if(result==PixelCopy.SUCCESS && capturedBitmap!=null){
-                    runOnUiThread {
-                        binding.txtMsg.visibility = View.VISIBLE
-                        binding.btnAiIcon.isEnabled = false
-                    }
-                    //base64 = bitmapToBase64(capturedBitmap!!)
-                    saveImage(capturedBitmap!!)
+        for ((key, node) in modelNode) {
+            if(selectedShades.contains(key)){
+                placeAtYAxis(node)
+                selectedShades.remove(key)
+            }
+        }
+        cntOfMannualSelection = 0
+        binding.btnSubmit.visibility = View.GONE
+        // Launch a coroutine
+        CoroutineScope(Dispatchers.IO).launch {
+            val result = copyPixels()
+            if(result==PixelCopy.SUCCESS){
+                runOnUiThread {
+                    binding.txtMsg.visibility = View.VISIBLE
+                    binding.btnAiIcon.isEnabled = false
+                }
+                //saveImage(capturedBitmap!!)
 
-                }else{
-                    runOnUiThread {
-                        Toast.makeText(this@ShadeSelectionActivity,"Fail to Process Bitmap",Toast.LENGTH_LONG).show()
-                    }
+            }else{
+                runOnUiThread {
+                    Toast.makeText(this@ShadeSelectionActivity,"Fail to Process Bitmap",Toast.LENGTH_LONG).show()
                 }
             }
-
-        }else{
-            showToast("you have already selected more than three tabs manually")
         }
     }
     public fun fetchShade(view: View) {
@@ -467,11 +481,6 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         cntOfMannualSelection = 0
         binding.btnSubmit.visibility = View.GONE
         arFragment.arSceneView.scene.addOnUpdateListener(updateListener)
-        /*if(selectedShades.size<=3){
-            arFragment.arSceneView.scene.addOnUpdateListener(updateListener)
-        }else{
-            showToast("you already selected more than three tabs manually")
-        }*/
     }
     private fun unRegisterUpdateListener(){
         arFragment.arSceneView.scene.removeOnUpdateListener(updateListener)
@@ -479,12 +488,13 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private fun saveImage(bitmap: Bitmap?){
         val fileOutputStream: FileOutputStream
         var dir = filesDir.absolutePath
-        val name = "captured_image_".plus(getCurrentTimeInHHmm()).plus(".png")
+        val name = "android_".plus(getCurrentTimeInHHmm()).plus(".png")//captured_image
         try {
             var file = File(dir.plus("/").plus(name))
             fileOutputStream = FileOutputStream(file)
             bitmap!!.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream)
             fileOutputStream.close()
+            bitmap.recycle()
             /*MainScope().launch {
                 viewModel.fetchShades(file)
             }*/
@@ -549,8 +559,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         showProgressBar()
         CoroutineScope(Dispatchers.IO).launch {
             val result = copyPixels()
-            if(result==PixelCopy.SUCCESS && capturedBitmap!=null){
-                base64 = bitmapToBase64(capturedBitmap!!)
+            if(result==PixelCopy.SUCCESS){
                 hideProgressBar()
                 for (item in selectedShades){
                     if(item!=null){
@@ -591,7 +600,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     }
     private fun bitmapToBase64(bitmap: Bitmap): String {
         val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream)
         val byteArray = byteArrayOutputStream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.NO_WRAP) // Use NO_WRAP to avoid newlines
     }
@@ -614,7 +623,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         return suspendCancellableCoroutine { continuation ->
             PixelCopy.request(view, bitmap, { result ->
                 if(bitmap!=null)
-                    this.capturedBitmap = bitmap
+                    base64 = bitmapToBase64(bitmap)
                 continuation.resume(result) {
                 }
             }, Handler(Looper.getMainLooper()))
@@ -688,15 +697,16 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                         }
                     }.await()
                     if (bitmap != null) {
-                        //base64 = bitmapToBase64(bitmap!!)
+                        saveImage(bitmap!!)
                         binding.txtMsg.visibility = View.VISIBLE
                         binding.btnAiIcon.isEnabled = false
-                        saveImage(bitmap!!)
-
                     }
                 }
             }
         } catch (ex: DeadlineExceededException) {
+            binding.btnAiIcon.isEnabled = true
+            Log.e("Dead Line Exp: ", ex.message.toString())
+        }catch (ex: NotYetAvailableException) {
             binding.btnAiIcon.isEnabled = true
             Log.e("Dead Line Exp: ", ex.message.toString())
         } catch (ex: Exception) {
@@ -705,12 +715,24 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             image?.close()
         }
     }
+    var sensorListener = object: SensorEventListener{
+        override fun onSensorChanged(event: SensorEvent?) {
+            mLightQuantity = event!!.values[0]
+            addPointLight(mLightQuantity/2.5f)
+            //showToast(mLightQuantity.toString())
+        }
+
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+        }
+
+    }
     private fun setupCameraFocusMode() {
         val session = Session(this@ShadeSelectionActivity)
         val config = Config(session)
         config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
         // config.focusMode = Config.FocusMode.FIXED
         config.focusMode = Config.FocusMode.AUTO
+        config.setLightEstimationMode(Config.LightEstimationMode.AMBIENT_INTENSITY)
         session.configure(config)
         arFragment.arSceneView.setupSession(session)
     }
