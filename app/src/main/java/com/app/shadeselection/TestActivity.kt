@@ -21,7 +21,7 @@ class TestActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if(resultCode == RESULT_OK){
-            showToast(data?.getStringExtra("data")!!)
+            //showToast(data?.getStringExtra("data")!!)
         }
     }
     private fun showToast(msg:String){
