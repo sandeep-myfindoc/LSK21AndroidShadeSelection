@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "429137662128",
+    "project_id": "lskshadeselection",
+    "storage_bucket": "lskshadeselection.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:429137662128:android:4ef8153baf76ed276aeb75",
+        "android_client_info": {
+          "package_name": "com.app.shadeselection"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnvjBuNKGz7ctDmcviGwQP1qh26xEhsT0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
