@@ -412,7 +412,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     }
     private fun addPointLight(intensity: Float){//: Light {//temp: FloatArray
         var pointLight = Light.builder(Light.Type.POINT)
-            .setColor(Color(1.0f,1.0f,1.0f))
+            //.setColor(Color(1.0f,1.0f,1.0f))
             //.setColorTemperature(2000f)
             .setShadowCastingEnabled(false)
             .setIntensity(intensity)
@@ -759,7 +759,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             }, delay.toLong())*/
             if(event?.sensor?.type == Sensor.TYPE_LIGHT){
                 mLightQuantity = event!!.values[0]
-                val maxIntensity = 10.0f
+                val maxIntensity = 8.0f
                 var temp = (mLightQuantity/5.0f).toFloat()
                 if(temp<maxIntensity) {
                     addPointLight(temp)
