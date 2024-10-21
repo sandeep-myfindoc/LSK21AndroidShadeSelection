@@ -80,12 +80,15 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     val renderableList = arrayListOf<ModelRenderable>()
     private  var base64: String? = null
     private var modelIndex: Int  = 0
-    private var x: Float = -0.066f
-    private val width = 0.0085f
+    private var x: Float = -0.068f
+    private val width = 0.0086f
     private var cntOfMannualSelection: Int = 0
     private var mSensorManager: SensorManager? = null
     private var mLightSensor: Sensor? = null
     private var mLightQuantity = 0f
+    private var isFirstTime = true
+    private val handler: Handler = Handler()
+    private val delay: Int = 2000
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
@@ -158,17 +161,22 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             binding.btnAiIcon.isEnabled = false
             loadNextModel()
         }
-        updateModalWithLight()
+        mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
+        mLightSensor = mSensorManager?.getDefaultSensor(Sensor.TYPE_LIGHT);
+        addDirectionalLight(550f)
         //arFragment.arSceneView.scene.sunlight?.light?.intensity = 700f
     //arFragment.transformationSystem.selectionVisualizer = BlanckSelectionVisualizer()
     }
-    private fun updateModalWithLight(){
-        mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
-        mLightSensor = mSensorManager?.getDefaultSensor(Sensor.TYPE_LIGHT);
-        mSensorManager?.registerListener(sensorListener,mLightSensor,SensorManager.SENSOR_DELAY_FASTEST)
 
+    override fun onResume() {
+        super.onResume()
+        mSensorManager?.registerListener(sensorListener,mLightSensor,SensorManager.SENSOR_DELAY_NORMAL)
     }
 
+    override fun onStop() {
+        super.onStop()
+        mSensorManager?.unregisterListener(sensorListener)
+    }
     private fun checkPermission(){
         if(ContextCompat.checkSelfPermission(this@ShadeSelectionActivity,android.Manifest.permission.CAMERA)==PackageManager.PERMISSION_GRANTED){
             setupCameraFocusMode()
@@ -404,9 +412,9 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     }
     private fun addPointLight(intensity: Float){//: Light {//temp: FloatArray
         var pointLight = Light.builder(Light.Type.POINT)
-            //.setColor(Color(1.0f,1.0f,1.0f))
+            .setColor(Color(1.0f,1.0f,1.0f))
             //.setColorTemperature(2000f)
-            //.setShadowCastingEnabled(true)
+            .setShadowCastingEnabled(false)
             .setIntensity(intensity)
             //.setFalloffRadius(2.0f)
             .build()
@@ -414,6 +422,18 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         val lightNode = Node()
         lightNode.light = pointLight
         //lightNode.worldPosition = Vector3(1f,0f,0f)
+        lightNode.setParent(arFragment.arSceneView.scene)
+    }
+    private fun addDirectionalLight(intensity: Float){//: Light {//temp: FloatArray
+        var pointLight = Light.builder(Light.Type.DIRECTIONAL)
+            //.setColor(Color(1.0f,1.0f,1.0f))
+            //.setColorTemperature(2000f)
+            .setShadowCastingEnabled(false)
+            .setIntensity(intensity)
+            .setFalloffRadius(2.0f)
+            .build()
+        val lightNode = Node()
+        lightNode.light = pointLight
         lightNode.setParent(arFragment.arSceneView.scene)
     }
     private fun onModelClicked(node: TransformableNode) {
@@ -718,8 +738,36 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     var sensorListener = object: SensorEventListener{
         override fun onSensorChanged(event: SensorEvent?) {
             mLightQuantity = event!!.values[0]
-            addPointLight(mLightQuantity/2.5f)
-            //showToast(mLightQuantity.toString())
+            /*if(!isFirstTime){
+                return
+            }
+            isFirstTime = false
+            handler.postDelayed(object : Runnable {
+                override fun run() {
+                    if(event.sensor.type == Sensor.TYPE_LIGHT){
+                        var temp = (mLightQuantity/5.0f).toFloat()
+                        if(temp<15.0f){
+                            addPointLight(temp)
+                        }else{
+                            addPointLight(15.0f)
+                        }
+                        //addDirectionalLight(mLightQuantity)//
+                        showToast("Intensity is : ".plus(mLightQuantity.toString()))
+                    }
+                    handler.postDelayed(this, delay.toLong())
+                }
+            }, delay.toLong())*/
+            if(event?.sensor?.type == Sensor.TYPE_LIGHT){
+                mLightQuantity = event!!.values[0]
+                val maxIntensity = 10.0f
+                var temp = (mLightQuantity/5.0f).toFloat()
+                if(temp<maxIntensity) {
+                    addPointLight(temp)
+                }else{
+                    addPointLight(maxIntensity)
+                }
+                //showToast("Intensity is : ".plus(mLightQuantity.toString()))
+            }
         }
 
         override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
