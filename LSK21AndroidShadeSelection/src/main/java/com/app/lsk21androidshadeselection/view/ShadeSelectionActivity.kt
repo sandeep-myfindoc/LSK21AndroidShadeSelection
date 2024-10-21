@@ -73,15 +73,15 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private val yAxis = -0.038f
     private val shiftYAxis: Float = 0.004f
     private val minScale: Float = 0.05f
-    private val maxScale: Float = 1.65f
-    private val zoomAbleScale: Float = 2.02f
+    private val maxScale: Float = 1.70f
+    private val zoomAbleScale: Float = 2.10f
     private lateinit var viewModel: ShadeSelectionViewModel
     val modelNode: HashMap<String, TransformableNode> = HashMap()
     val renderableList = arrayListOf<ModelRenderable>()
     private  var base64: String? = null
     private var modelIndex: Int  = 0
     private var x: Float = -0.068f
-    private val width = 0.0086f
+    private val width = 0.0088f
     private var cntOfMannualSelection: Int = 0
     private var mSensorManager: SensorManager? = null
     private var mLightSensor: Sensor? = null
