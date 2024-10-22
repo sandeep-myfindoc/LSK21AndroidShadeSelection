@@ -73,7 +73,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private val yAxis = -0.038f
     private val shiftYAxis: Float = 0.004f
     private val minScale: Float = 0.05f
-    private val maxScale: Float = 1.70f
+    private val maxScale: Float = 1.60f
     private val zoomAbleScale: Float = 2.10f
     private lateinit var viewModel: ShadeSelectionViewModel
     val modelNode: HashMap<String, TransformableNode> = HashMap()
@@ -89,6 +89,8 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private var isFirstTime = true
     private val handler: Handler = Handler()
     private val delay: Int = 2000
+    private var cntRightMove = 0
+    private var cntLeftMove = 0
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
@@ -163,18 +165,17 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         }
         mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         mLightSensor = mSensorManager?.getDefaultSensor(Sensor.TYPE_LIGHT);
-        addDirectionalLight(550f)
         //arFragment.arSceneView.scene.sunlight?.light?.intensity = 700f
     //arFragment.transformationSystem.selectionVisualizer = BlanckSelectionVisualizer()
     }
 
     override fun onResume() {
         super.onResume()
-        mSensorManager?.registerListener(sensorListener,mLightSensor,SensorManager.SENSOR_DELAY_NORMAL)
+        mSensorManager?.registerListener(sensorListener,mLightSensor,SensorManager.SENSOR_DELAY_FASTEST)
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onDestroy() {
+        super.onDestroy()
         mSensorManager?.unregisterListener(sensorListener)
     }
     private fun checkPermission(){
@@ -430,7 +431,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             //.setColorTemperature(2000f)
             .setShadowCastingEnabled(false)
             .setIntensity(intensity)
-            .setFalloffRadius(2.0f)
+            //.setFalloffRadius(2.0f)
             .build()
         val lightNode = Node()
         lightNode.light = pointLight
@@ -599,6 +600,8 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         }
     }
     public fun moveLeft(view: View){
+        if(cntLeftMove==6)
+            return
         for ((key, node) in modelNode) {
             node.localPosition = com.google.ar.sceneform.math.Vector3(
                 node.localPosition.x-(width*1),
@@ -607,8 +610,16 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             )
 
         }
+        if(cntRightMove!=0){
+            cntRightMove--
+        }else{
+            cntLeftMove++
+        }
+
     }
     public fun moveRight(view: View){
+        if(cntRightMove==6)
+            return
         for ((key, node) in modelNode) {
             node.localPosition = com.google.ar.sceneform.math.Vector3(
                 node.localPosition.x+(width*1),
@@ -616,6 +627,11 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                 node.localPosition.z + 0.0f
             )
 
+        }
+        if(cntLeftMove!=0){
+            cntLeftMove--
+        }else{
+            cntRightMove++
         }
     }
     private fun bitmapToBase64(bitmap: Bitmap): String {
@@ -738,6 +754,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     var sensorListener = object: SensorEventListener{
         override fun onSensorChanged(event: SensorEvent?) {
             mLightQuantity = event!!.values[0]
+            //showToast(mLightQuantity.toString())
             /*if(!isFirstTime){
                 return
             }
@@ -758,15 +775,36 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                 }
             }, delay.toLong())*/
             if(event?.sensor?.type == Sensor.TYPE_LIGHT){
-                mLightQuantity = event!!.values[0]
-                val maxIntensity = 8.0f
                 var temp = (mLightQuantity/5.0f).toFloat()
-                if(temp<maxIntensity) {
-                    addPointLight(temp)
-                }else{
-                    addPointLight(maxIntensity)
+
+                if(temp>=11.0f){
+                    addDirectionalLight(540f)
                 }
-                //showToast("Intensity is : ".plus(mLightQuantity.toString()))
+                else if(temp>=10.0f){
+                    addDirectionalLight(530f)
+                }
+                else if(temp>=9.0f){
+                    addDirectionalLight(520f)
+                }
+                else if(temp>=8.0f){
+                    addDirectionalLight(510f)
+                }else if(temp >= 7.0f){
+                    addDirectionalLight(500f)
+                }else if(temp >= 6.0f){
+                    addDirectionalLight(490f)
+                }else if(temp >= 5.0f){
+                    addDirectionalLight(480f)
+                }else if(temp >= 4.0f){
+                    addDirectionalLight(470f)
+                }else if(temp >= 3.0f){
+                    addDirectionalLight(460f)
+                }else if(temp >= 2.0f){
+                    addDirectionalLight(450f)
+                }else if(temp >= 1.0f){
+                    addDirectionalLight(0.0f)
+                }else{
+                    addDirectionalLight(0.0f)
+                }
             }
         }
 
