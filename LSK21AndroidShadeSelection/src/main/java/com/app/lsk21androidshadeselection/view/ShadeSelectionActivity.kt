@@ -91,6 +91,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private val delay: Int = 2000
     private var cntRightMove = 0
     private var cntLeftMove = 0
+    val lightNode = Node()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
@@ -99,6 +100,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         arFragment.planeDiscoveryController.hide()
         arFragment.planeDiscoveryController.setInstructionView(null)
         arFragment.arSceneView.planeRenderer.isVisible = false
+        lightNode.setParent(arFragment.arSceneView.scene)
         checkPermission()
         try{
             var cnt = 1
@@ -165,6 +167,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         }
         mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         mLightSensor = mSensorManager?.getDefaultSensor(Sensor.TYPE_LIGHT);
+        addDirectionalLight(600f)
         //arFragment.arSceneView.scene.sunlight?.light?.intensity = 700f
     //arFragment.transformationSystem.selectionVisualizer = BlanckSelectionVisualizer()
     }
@@ -196,6 +199,8 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                     renderable.material.setFloat("metallic", 1.0f);
                     renderable.material.setFloat("roughness", 0.1f);
                     renderable?.material?.setFloat3("ambientColor", ambientColor)*/
+                    renderable.isShadowCaster = false
+                    renderable.isShadowReceiver = false
                     var temp = TransformableNode(arFragment.transformationSystem)
                     modelNode[fetchCode(modelData.texturePath)] = temp
                     renderableList.add(renderable)
@@ -270,7 +275,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         viewModel.errMessage.observe(this@ShadeSelectionActivity, Observer {
             if(it.toString().isNotEmpty()){
                 showToast(it.toString())
-                binding.txtMsg.visibility = View.GONE
+                binding.layoutMsg.visibility = View.GONE
             }
         })
         viewModel.teetShadeResponseLiveData.observe(this@ShadeSelectionActivity, Observer {
@@ -290,11 +295,11 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                     updateOnBasisOfShadeCode(it.colorRecommendation.color3.shadeCode)
                 }
                 binding.btnSubmit.visibility = View.VISIBLE
-                binding.txtMsg.visibility = View.GONE
+                binding.layoutMsg.visibility = View.GONE
             }else{
                 binding.btnAiIcon.isEnabled = true
                 showToast(it.message.toString())
-                binding.txtMsg.visibility = View.GONE
+                binding.layoutMsg.visibility = View.GONE
             }
         })
     }
@@ -425,7 +430,8 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         //lightNode.worldPosition = Vector3(1f,0f,0f)
         lightNode.setParent(arFragment.arSceneView.scene)
     }
-    private fun addDirectionalLight(intensity: Float){//: Light {//temp: FloatArray
+    private fun addDirectionalLight(intensity: Float){
+        arFragment.arSceneView.scene.removeChild(lightNode)
         var pointLight = Light.builder(Light.Type.DIRECTIONAL)
             //.setColor(Color(1.0f,1.0f,1.0f))
             //.setColorTemperature(2000f)
@@ -433,7 +439,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             .setIntensity(intensity)
             //.setFalloffRadius(2.0f)
             .build()
-        val lightNode = Node()
+        //lightNode = Node()
         lightNode.light = pointLight
         lightNode.setParent(arFragment.arSceneView.scene)
     }
@@ -480,7 +486,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             val result = copyPixels()
             if(result==PixelCopy.SUCCESS){
                 runOnUiThread {
-                    binding.txtMsg.visibility = View.VISIBLE
+                    binding.layoutMsg.visibility = View.VISIBLE
                     binding.btnAiIcon.isEnabled = false
                 }
                 //saveImage(capturedBitmap!!)
@@ -678,7 +684,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     }
 
     override fun onSucess(response: String) {
-        binding.txtMsg.visibility = View.GONE
+        binding.layoutMsg.visibility = View.GONE
 //        writeFileToMediaStore("Report.txt", response.toString())
         //val res = Gson().fromJson<AIResponse>(response.toString(),object : TypeToken<AIResponse>() {}.type)
         val jsonObject = JSONObject(response.toString())
@@ -703,17 +709,17 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                 updateOnBasisOfShadeCode(shadeCode)
             }
             binding.btnSubmit.visibility = View.VISIBLE
-            binding.txtMsg.visibility = View.GONE
+            binding.layoutMsg.visibility = View.GONE
             binding.btnAiIcon.isEnabled = true
         }else{
             binding.btnAiIcon.isEnabled = true
             showToast(jsonObject.getString("message"))
-            binding.txtMsg.visibility = View.GONE
+            binding.layoutMsg.visibility = View.GONE
         }
     }
 
     override fun onFailure(response: String) {
-        binding.txtMsg.visibility = View.GONE
+        binding.layoutMsg.visibility = View.GONE
         binding.btnAiIcon.isEnabled = true
         showToast("Something went wrong please try again later..")
     }
@@ -734,7 +740,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                     }.await()
                     if (bitmap != null) {
                         saveImage(bitmap!!)
-                        binding.txtMsg.visibility = View.VISIBLE
+                        binding.layoutMsg.visibility = View.VISIBLE
                         binding.btnAiIcon.isEnabled = false
                     }
                 }
@@ -776,30 +782,30 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             }, delay.toLong())*/
             if(event?.sensor?.type == Sensor.TYPE_LIGHT){
                 var temp = (mLightQuantity/5.0f).toFloat()
-
+                //showToast("DIM      ".plus(temp.toString()))
                 if(temp>=11.0f){
-                    addDirectionalLight(540f)
+                    addDirectionalLight(600f)
                 }
                 else if(temp>=10.0f){
-                    addDirectionalLight(530f)
+                    addDirectionalLight(590f)
                 }
                 else if(temp>=9.0f){
-                    addDirectionalLight(520f)
+                    addDirectionalLight(580f)
                 }
                 else if(temp>=8.0f){
-                    addDirectionalLight(510f)
+                    addDirectionalLight(570f)
                 }else if(temp >= 7.0f){
-                    addDirectionalLight(500f)
+                    addDirectionalLight(560f)
                 }else if(temp >= 6.0f){
-                    addDirectionalLight(490f)
+                    addDirectionalLight(550f)
                 }else if(temp >= 5.0f){
-                    addDirectionalLight(480f)
+                    addDirectionalLight(540f)
                 }else if(temp >= 4.0f){
-                    addDirectionalLight(470f)
+                    addDirectionalLight(530f)
                 }else if(temp >= 3.0f){
-                    addDirectionalLight(460f)
+                    addDirectionalLight(520f)
                 }else if(temp >= 2.0f){
-                    addDirectionalLight(450f)
+                    addDirectionalLight(510f)
                 }else if(temp >= 1.0f){
                     addDirectionalLight(0.0f)
                 }else{
