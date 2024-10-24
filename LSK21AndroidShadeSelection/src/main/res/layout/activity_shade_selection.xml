@@ -16,25 +16,35 @@
             android:name="com.google.ar.sceneform.ux.ArFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
-        <!--<LinearLayout
+        <FrameLayout
+            android:visibility="gone"
             android:id="@+id/layoutMsg"
-            android:padding="7dp"
-            android:background="#92AEC4"
-            android:alpha="0.5"
             android:layout_centerInParent="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
-            <TextView
-                android:textSize="20dp"
-                android:textColor="#ffffff"
-                android:visibility="visible"
-                android:text="AI choosing closer shade..."
+            <LinearLayout
+                android:paddingLeft="25dp"
+                android:paddingRight="25dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp"
+                android:background="@drawable/drawable_corner"
+                android:alpha="0.8"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
+                <TextView
+                    android:textSize="20dp"
+                    android:textColor="#ffffff"
+                    android:visibility="visible"
+                    android:alpha="1.0"
+                    android:text="AI choosing closer shades..."
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
 
-            </TextView>
-        </LinearLayout>-->
-        <TextView
+                </TextView>
+            </LinearLayout>
+        </FrameLayout>
+
+        <!--<TextView
             android:textSize="20dp"
             android:textColor="#0099FF"
             android:visibility="gone"
@@ -44,7 +54,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
-        </TextView>
+        </TextView>-->
 
         <!--<ImageView
             android:padding="5dp"
@@ -102,7 +112,7 @@
                 android:visibility="invisible"
                 android:onClick="moveForward"
                 android:textColor="#ffffff"
-                android:background="#92AEC4"
+                android:background="@drawable/drawable_corner_shadow"
                 >
             </Button>
             <!--<ImageView
@@ -124,35 +134,36 @@
             android:layout_below="@id/layoutButtons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
+
             <LinearLayout
+                android:background="@android:color/transparent"
                 android:layout_centerVertical="true"
                 android:layout_alignParentLeft="true"
                 android:orientation="horizontal"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
                 <LinearLayout
-                    android:layout_marginRight="10dp"
-                    android:id="@+id/layoutBackward"
+                    android:layout_marginRight="5dp"
                     android:clickable="true"
                     android:onClick="moveLeft"
                     android:gravity="center"
-                    android:background="#92AEC4"
-                    android:layout_width="45dp"
-                    android:layout_height="45dp">
-
+                    android:background="@drawable/drawable_corner_shadow"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp">
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:src="@drawable/backward"></ImageView>
+                        android:src="@drawable/backward">
+                    </ImageView>
                 </LinearLayout>
                 <LinearLayout
                     android:id="@+id/layoutForward"
                     android:clickable="true"
                     android:onClick="moveRight"
                     android:gravity="center"
-                    android:background="#92AEC4"
-                    android:layout_width="45dp"
-                    android:layout_height="45dp">
+                    android:background="@drawable/drawable_corner_shadow"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp">
                     <ImageView
                         android:src="@drawable/forward"
                         android:layout_width="wrap_content"
