@@ -787,25 +787,25 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                     addDirectionalLight(600f)
                 }
                 else if(temp>=10.0f){
-                    addDirectionalLight(590f)
+                    addDirectionalLight(595f)
                 }
                 else if(temp>=9.0f){
-                    addDirectionalLight(580f)
+                    addDirectionalLight(590f)
                 }
                 else if(temp>=8.0f){
-                    addDirectionalLight(570f)
+                    addDirectionalLight(585f)
                 }else if(temp >= 7.0f){
-                    addDirectionalLight(560f)
+                    addDirectionalLight(580f)
                 }else if(temp >= 6.0f){
-                    addDirectionalLight(550f)
+                    addDirectionalLight(575f)
                 }else if(temp >= 5.0f){
-                    addDirectionalLight(540f)
+                    addDirectionalLight(570f)
                 }else if(temp >= 4.0f){
-                    addDirectionalLight(530f)
+                    addDirectionalLight(565f)
                 }else if(temp >= 3.0f){
-                    addDirectionalLight(520f)
+                    addDirectionalLight(560f)
                 }else if(temp >= 2.0f){
-                    addDirectionalLight(510f)
+                    addDirectionalLight(555f)
                 }else if(temp >= 1.0f){
                     addDirectionalLight(0.0f)
                 }else{

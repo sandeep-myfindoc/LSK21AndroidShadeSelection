@@ -8,10 +8,10 @@
     </item>
 
     <item
-        android:left="2dp"
-        android:right="2dp"
-        android:top="1dp"
-        android:bottom="4dp"><!-- for shadow -->
+        android:left="0dp"
+        android:right="3dp"
+        android:top="0dp"
+        android:bottom="5dp"><!-- for shadow -->
         <shape android:shape="rectangle">
             <solid android:color="#92AEC4"/>
             <corners android:radius="11dp" /><!-- for view radius & colour -->
