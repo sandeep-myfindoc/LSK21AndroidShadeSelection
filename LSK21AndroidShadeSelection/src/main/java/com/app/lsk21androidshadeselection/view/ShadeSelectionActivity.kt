@@ -582,31 +582,39 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         finish()
     }
     public fun moveForward(view: View){
-        var resultString = "submit,"
-        if(selectedShades.size == 0){
-            showToast("Please select the shade before submitting")
-            return
-        }
-        showProgressBar()
-        CoroutineScope(Dispatchers.IO).launch {
-            val result = copyPixels()
-            if(result==PixelCopy.SUCCESS){
-                hideProgressBar()
-                for (item in selectedShades){
-                    if(item!=null){
-                        resultString = resultString.plus(item).plus(",")
+        try{
+            var resultString = "submit,"
+            if(selectedShades.size == 0){
+                showToast("Please select the shade before submitting")
+                return
+            }
+            showProgressBar()
+            CoroutineScope(Dispatchers.IO).launch {
+                val result = copyPixels()
+                if(result==PixelCopy.SUCCESS){
+                    hideProgressBar()
+                    for (item in selectedShades){
+                        if(item!=null){
+                            resultString = resultString.plus(item).plus(",")
+                        }
+                    }
+                    resultString.plus(base64)
+                    val resultIntent = Intent()
+                    resultString = resultString.plus(base64)
+                    resultIntent.putExtra("data",resultString)
+                    setResult(Activity.RESULT_OK,resultIntent)
+                    finish()
+                }else{
+                    runOnUiThread {
                     }
                 }
-                resultString.plus(base64)
-                val resultIntent = Intent()
-                resultString = resultString.plus(base64)
-                resultIntent.putExtra("data",resultString)
-                setResult(Activity.RESULT_OK,resultIntent)
-                finish()
-            }else{
-                runOnUiThread {
-                }
             }
+        }catch(ex: Exception){
+            ex.printStackTrace()
+        }catch(ex: Error){
+            ex.printStackTrace()
+        }catch (ex: Throwable){
+            ex.printStackTrace()
         }
     }
     public fun moveLeft(view: View){
@@ -756,8 +764,15 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             binding.btnAiIcon.isEnabled = true
             Log.e("Dead Line Exp: ", ex.message.toString())
         } catch (ex: Exception) {
+            binding.btnAiIcon.isEnabled = true
             Log.e("Fail to Create Bitmap: ", ex.message.toString())
-        } finally {
+        } catch(ex: Throwable){
+            binding.btnAiIcon.isEnabled = true
+            ex.printStackTrace()
+        }catch(ex: Error){
+            binding.btnAiIcon.isEnabled = true
+            ex.printStackTrace()
+        }finally {
             image?.close()
         }
     }
