@@ -16,6 +16,7 @@
             android:name="com.google.ar.sceneform.ux.ArFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
+        <!-- Text View -->
         <FrameLayout
             android:visibility="gone"
             android:id="@+id/layoutMsg"
@@ -43,37 +44,7 @@
                 </TextView>
             </LinearLayout>
         </FrameLayout>
-
-        <!--<TextView
-            android:textSize="20dp"
-            android:textColor="#0099FF"
-            android:visibility="gone"
-            android:id="@+id/txtMsg"
-            android:layout_centerInParent="true"
-            android:text="AI choosing closer shade..."
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-        </TextView>-->
-
-        <!--<ImageView
-            android:padding="5dp"
-            android:layout_margin="20dp"
-            android:src="@drawable/camera_frame"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-        </ImageView>-->
-
-        <!--<ImageView
-            android:id="@+id/btnAiIcon"
-            android:src="@drawable/ai_icon"
-            android:onClick="fetchShade"
-            android:layout_marginRight="15dp"
-            android:layout_centerVertical="true"
-            android:layout_alignParentRight="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-        </ImageView>-->
+        <!-- layout for back & submit -->
         <RelativeLayout
             android:id="@+id/layoutButtons"
             android:layout_marginTop="30dp"
@@ -127,50 +98,62 @@
                 android:layout_height="wrap_content">
             </ImageView>-->
         </RelativeLayout>
+        <!-- layout for backward & forward buttons -->
+        <LinearLayout
+            android:layout_marginTop="10dp"
+            android:paddingRight="20dp"
+            android:id="@+id/layoutArrows"
+            android:layout_below="@+id/layoutButtons"
+            android:layout_alignParentRight="true"
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:layout_marginRight="7dp"
+                android:clickable="true"
+                android:onClick="moveLeft"
+                android:gravity="center"
+                android:background="@drawable/drawable_corner_shadow"
+                android:layout_width="55dp"
+                android:layout_height="55dp">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/backward">
+                </ImageView>
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/layoutForward"
+                android:clickable="true"
+                android:onClick="moveRight"
+                android:gravity="center"
+                android:background="@drawable/drawable_corner_shadow"
+                android:layout_width="55dp"
+                android:layout_height="55dp">
+                <ImageView
+                    android:src="@drawable/forward"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+                </ImageView>
+            </LinearLayout>
+        </LinearLayout>
+        <!-- layout for AI & switch -->
         <RelativeLayout
-            android:layout_marginTop="20dp"
+            android:id="@+id/layoutAI"
+            android:layout_marginTop="10dp"
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
-            android:layout_below="@id/layoutButtons"
+            android:layout_below="@id/layoutArrows"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-
-            <LinearLayout
-                android:background="@android:color/transparent"
+            <vn.luongvo.widget.iosswitchview.SwitchView
                 android:layout_centerVertical="true"
-                android:layout_alignParentLeft="true"
-                android:orientation="horizontal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-                <LinearLayout
-                    android:layout_marginRight="7dp"
-                    android:clickable="true"
-                    android:onClick="moveLeft"
-                    android:gravity="center"
-                    android:background="@drawable/drawable_corner_shadow"
-                    android:layout_width="55dp"
-                    android:layout_height="55dp">
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/backward">
-                    </ImageView>
-                </LinearLayout>
-                <LinearLayout
-                    android:id="@+id/layoutForward"
-                    android:clickable="true"
-                    android:onClick="moveRight"
-                    android:gravity="center"
-                    android:background="@drawable/drawable_corner_shadow"
-                    android:layout_width="55dp"
-                    android:layout_height="55dp">
-                    <ImageView
-                        android:src="@drawable/forward"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content">
-                    </ImageView>
-                </LinearLayout>
-            </LinearLayout>
+                android:id="@+id/swFlash"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                app:checked="false"
+                app:color_off="#ffffff"
+                app:color_on="#92AEC4" />
             <ImageView
                 android:layout_centerVertical="true"
                 android:id="@+id/btnAiIcon"

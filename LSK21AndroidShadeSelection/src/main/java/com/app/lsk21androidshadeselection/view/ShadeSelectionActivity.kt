@@ -55,6 +55,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import org.json.JSONObject
+import vn.luongvo.widget.iosswitchview.SwitchView
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -81,7 +82,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private  var base64: String? = null
     private var modelIndex: Int  = 0
     private var x: Float = -0.068f
-    private val width = 0.0088f
+    private val width = 0.0090f
     private var cntOfMannualSelection: Int = 0
     private var mSensorManager: SensorManager? = null
     private var mLightSensor: Sensor? = null
@@ -92,6 +93,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private var cntRightMove = 0
     private var cntLeftMove = 0
     val lightNode = Node()
+    private var session: Session? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
@@ -101,6 +103,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         arFragment.planeDiscoveryController.setInstructionView(null)
         arFragment.arSceneView.planeRenderer.isVisible = false
         lightNode.setParent(arFragment.arSceneView.scene)
+        session = Session(this@ShadeSelectionActivity)
         checkPermission()
         try{
             var cnt = 1
@@ -168,6 +171,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         mLightSensor = mSensorManager?.getDefaultSensor(Sensor.TYPE_LIGHT);
         addDirectionalLight(600f)
+        binding.swFlash.setOnCheckedChangeListener(checkedListener)
         //arFragment.arSceneView.scene.sunlight?.light?.intensity = 700f
     //arFragment.transformationSystem.selectionVisualizer = BlanckSelectionVisualizer()
     }
@@ -183,7 +187,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     }
     private fun checkPermission(){
         if(ContextCompat.checkSelfPermission(this@ShadeSelectionActivity,android.Manifest.permission.CAMERA)==PackageManager.PERMISSION_GRANTED){
-            setupCameraFocusMode()
+            setupCameraFocusMode(false)
         }
     }
     private fun loadNextModel() {
@@ -818,14 +822,23 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         }
 
     }
-    private fun setupCameraFocusMode() {
-        val session = Session(this@ShadeSelectionActivity)
+    val checkedListener = object: SwitchView.OnCheckedChangeListener{
+        override fun onCheckedChanged(buttonView: SwitchView?, isChecked: Boolean) {
+            setupCameraFocusMode(isChecked)
+        }
+
+    }
+    private fun setupCameraFocusMode(flag:Boolean) {
         val config = Config(session)
         config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
-        // config.focusMode = Config.FocusMode.FIXED
         config.focusMode = Config.FocusMode.AUTO
+        if(flag){
+            config.flashMode = Config.FlashMode.TORCH
+        }else{
+            config.flashMode = Config.FlashMode.OFF
+        }
         config.setLightEstimationMode(Config.LightEstimationMode.AMBIENT_INTENSITY)
-        session.configure(config)
+        session?.configure(config)
         arFragment.arSceneView.setupSession(session)
     }
     /*class BlanckSelectionVisualizer : SelectionVisualizer {
@@ -850,7 +863,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if(grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-            setupCameraFocusMode()
+            setupCameraFocusMode(false)
         }
     }
 
