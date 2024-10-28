@@ -79,7 +79,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private lateinit var viewModel: ShadeSelectionViewModel
     val modelNode: HashMap<String, TransformableNode> = HashMap()
     val renderableList = arrayListOf<ModelRenderable>()
-    private  var base64: String? = null
+    private  var imagePath: String? = null
     private var modelIndex: Int  = 0
     private var x: Float = -0.068f
     private val width = 0.0090f
@@ -90,6 +90,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private var isFirstTime = true
     private val handler: Handler = Handler()
     private val delay: Int = 2000
+    private var isSubmitClicked = false
     private var cntRightMove = 0
     private var cntLeftMove = 0
     val lightNode = Node()
@@ -103,7 +104,6 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         arFragment.planeDiscoveryController.setInstructionView(null)
         arFragment.arSceneView.planeRenderer.isVisible = false
         lightNode.setParent(arFragment.arSceneView.scene)
-        session = Session(this@ShadeSelectionActivity)
         checkPermission()
         try{
             var cnt = 1
@@ -187,6 +187,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     }
     private fun checkPermission(){
         if(ContextCompat.checkSelfPermission(this@ShadeSelectionActivity,android.Manifest.permission.CAMERA)==PackageManager.PERMISSION_GRANTED){
+            session = Session(this@ShadeSelectionActivity)
             setupCameraFocusMode(false)
         }
     }
@@ -438,12 +439,9 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         arFragment.arSceneView.scene.removeChild(lightNode)
         var pointLight = Light.builder(Light.Type.DIRECTIONAL)
             //.setColor(Color(1.0f,1.0f,1.0f))
-            //.setColorTemperature(2000f)
             .setShadowCastingEnabled(false)
             .setIntensity(intensity)
-            //.setFalloffRadius(2.0f)
             .build()
-        //lightNode = Node()
         lightNode.light = pointLight
         lightNode.setParent(arFragment.arSceneView.scene)
     }
@@ -529,7 +527,11 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             /*MainScope().launch {
                 viewModel.fetchShades(file)
             }*/
-            UploadFileToServer(file.absolutePath,this).execute()
+            if(isSubmitClicked){
+                imagePath = file.absolutePath
+            }else{
+                UploadFileToServer(file.absolutePath,this).execute()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -591,30 +593,40 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             showProgressBar()
             CoroutineScope(Dispatchers.IO).launch {
                 val result = copyPixels()
-                if(result==PixelCopy.SUCCESS){
-                    hideProgressBar()
-                    for (item in selectedShades){
-                        if(item!=null){
-                            resultString = resultString.plus(item).plus(",")
+                try{
+                    if(result==PixelCopy.SUCCESS){
+                        hideProgressBar()
+                        for (item in selectedShades){
+                            if(item!=null){
+                                resultString = resultString.plus(item).plus(",")
+                            }
                         }
+                        val resultIntent = Intent()
+                        resultString = resultString.plus(imagePath)
+                        resultIntent.putExtra("data",resultString)
+                        setResult(Activity.RESULT_OK,resultIntent)
+                        imagePath = null
+                        isSubmitClicked = false
+                        finish()
                     }
-                    resultString.plus(base64)
-                    val resultIntent = Intent()
-                    resultString = resultString.plus(base64)
-                    resultIntent.putExtra("data",resultString)
-                    setResult(Activity.RESULT_OK,resultIntent)
-                    finish()
-                }else{
-                    runOnUiThread {
-                    }
+                }catch(ex: Exception){
+                    ex.printStackTrace()
+                }
+                catch(ex: Throwable){
+                    ex.printStackTrace()
                 }
             }
         }catch(ex: Exception){
             ex.printStackTrace()
         }catch(ex: Error){
             ex.printStackTrace()
-        }catch (ex: Throwable){
+        }catch(ex: DeadlineExceededException){
             ex.printStackTrace()
+            //showToast("DeadlineExceededException-MoveForward")
+        }
+        catch (ex: Throwable){
+            ex.printStackTrace()
+            //showToast("Throwable-MoveForward")
         }
     }
     public fun moveLeft(view: View){
@@ -653,10 +665,19 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         }
     }
     private fun bitmapToBase64(bitmap: Bitmap): String {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream)
-        val byteArray = byteArrayOutputStream.toByteArray()
-        return Base64.encodeToString(byteArray, Base64.NO_WRAP) // Use NO_WRAP to avoid newlines
+        try {
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream)
+            val byteArray = byteArrayOutputStream.toByteArray()
+            return Base64.encodeToString(byteArray, Base64.NO_WRAP) // Use NO_WRAP to avoid newlines
+        }catch(ex:Exception){
+            ex.printStackTrace()
+            return ""
+        }catch(ex:Throwable){
+            ex.printStackTrace()
+            return ""
+        }
+
     }
     private fun getCurrentTimeInHHmm(): String {
         try {
@@ -675,12 +696,22 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         val view: ArSceneView = arFragment.arSceneView
         val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
         return suspendCancellableCoroutine { continuation ->
-            PixelCopy.request(view, bitmap, { result ->
-                if(bitmap!=null)
-                    base64 = bitmapToBase64(bitmap)
-                continuation.resume(result) {
-                }
-            }, Handler(Looper.getMainLooper()))
+            try{
+                PixelCopy.request(view, bitmap, { result ->
+                    if(bitmap!=null){
+                        isSubmitClicked = true
+                        saveImage(bitmap)
+                    }
+                    continuation.resume(result) {
+                    }
+                }, Handler(Looper.getMainLooper()))
+            }catch(ex: DeadlineExceededException){
+                ex.printStackTrace()
+            }catch(ex: Exception){
+                ex.printStackTrace()
+            }catch(ex: Throwable){
+                ex.printStackTrace()
+            }
         }
     }
     private suspend fun fetchBitMap(image: Image): Bitmap?{
@@ -744,7 +775,13 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                 MainScope().launch {
                     var bitmap: Bitmap? = null
                     CoroutineScope(Dispatchers.IO).async {
-                        image = frame!!.acquireCameraImage()
+                        try {
+                            image = frame!!.acquireCameraImage()
+                        }catch(ex: DeadlineExceededException){
+                            //showToast("DeadlineExceededException - IO")
+                        }catch(ex: Throwable){
+                            //showToast("Throwable - IO")
+                        }
                         if (image != null) {
                             bitmap = fetchBitMap(image!!)
                             image!!.close()
@@ -769,9 +806,15 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         } catch(ex: Throwable){
             binding.btnAiIcon.isEnabled = true
             ex.printStackTrace()
+            //showToast("Throwable")
         }catch(ex: Error){
             binding.btnAiIcon.isEnabled = true
             ex.printStackTrace()
+            //showToast("Error")
+        }catch(ex: RuntimeException){
+            binding.btnAiIcon.isEnabled = true
+            ex.printStackTrace()
+            //showToast("RuntimeException")
         }finally {
             image?.close()
         }
@@ -806,25 +849,25 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                     addDirectionalLight(600f)
                 }
                 else if(temp>=10.0f){
-                    addDirectionalLight(595f)
+
                 }
                 else if(temp>=9.0f){
-                    addDirectionalLight(590f)
+                    addDirectionalLight(595f)
                 }
                 else if(temp>=8.0f){
-                    addDirectionalLight(585f)
+                    //addDirectionalLight(585f)
                 }else if(temp >= 7.0f){
-                    addDirectionalLight(580f)
+                    addDirectionalLight(590f)
                 }else if(temp >= 6.0f){
-                    addDirectionalLight(575f)
+                    //addDirectionalLight(575f)
                 }else if(temp >= 5.0f){
-                    addDirectionalLight(570f)
+                    addDirectionalLight(585f)
                 }else if(temp >= 4.0f){
-                    addDirectionalLight(565f)
+                    //addDirectionalLight(565f)
                 }else if(temp >= 3.0f){
-                    addDirectionalLight(560f)
+                    addDirectionalLight(580f)
                 }else if(temp >= 2.0f){
-                    addDirectionalLight(555f)
+                    //addDirectionalLight(555f)
                 }else if(temp >= 1.0f){
                     addDirectionalLight(0.0f)
                 }else{
@@ -878,6 +921,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if(grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+            session = Session(this@ShadeSelectionActivity)
             setupCameraFocusMode(false)
         }
     }
