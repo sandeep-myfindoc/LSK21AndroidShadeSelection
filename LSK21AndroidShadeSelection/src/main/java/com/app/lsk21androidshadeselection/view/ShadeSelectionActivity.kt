@@ -32,6 +32,7 @@ import com.app.lsk21androidshadeselection.network.UploadFileToServer
 import com.app.lsk21androidshadeselection.util.ResultReceiver
 import com.app.lsk21androidshadeselection.util.YuvToRgbConverter
 import com.app.teethdetectioncameralibrary.viewModel.ShadeSelectionViewModel
+import com.google.ar.core.ArCoreApk
 import com.google.ar.core.Config
 import com.google.ar.core.Session
 import com.google.ar.core.exceptions.DeadlineExceededException
@@ -98,6 +99,9 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
+        if(!checkArCoreAvailability()){
+            finish()
+        }
         arFragment = supportFragmentManager.findFragmentById(R.id.sceneform_fragment) as ArFragment
         viewModel = ViewModelProvider(this).get(ShadeSelectionViewModel::class.java)
         arFragment.planeDiscoveryController.hide()
@@ -175,7 +179,48 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         //arFragment.arSceneView.scene.sunlight?.light?.intensity = 700f
     //arFragment.transformationSystem.selectionVisualizer = BlanckSelectionVisualizer()
     }
+    private fun checkArCoreAvailability(): Boolean{
+        val arCoreAvailability = ArCoreApk.getInstance().checkAvailability(this)
 
+        when (arCoreAvailability) {
+            ArCoreApk.Availability.SUPPORTED_INSTALLED -> {
+                return true
+            }
+            ArCoreApk.Availability.SUPPORTED_APK_TOO_OLD -> {
+                promptUpdateArCore()
+                return false
+            }
+            ArCoreApk.Availability.SUPPORTED_NOT_INSTALLED -> {
+                promptInstallArCore()
+                return false
+            }
+            ArCoreApk.Availability.UNKNOWN_CHECKING -> {
+                return false
+            }
+            ArCoreApk.Availability.UNKNOWN_ERROR -> {
+                return false
+            }
+
+            ArCoreApk.Availability.UNKNOWN_TIMED_OUT -> return false
+            ArCoreApk.Availability.UNSUPPORTED_DEVICE_NOT_CAPABLE -> return false
+        }
+    }
+
+    private fun promptUpdateArCore() {
+        openPlayStore("com.google.ar.core")
+    }
+
+    private fun promptInstallArCore() {
+        openPlayStore("com.google.ar.core")
+    }
+
+    private fun openPlayStore(packageName: String) {
+        try {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")))
+        } catch (e: Exception) {
+            Toast.makeText(this, "Unable to open Play Store", Toast.LENGTH_SHORT).show()
+        }
+    }
     override fun onResume() {
         super.onResume()
         mSensorManager?.registerListener(sensorListener,mLightSensor,SensorManager.SENSOR_DELAY_FASTEST)
