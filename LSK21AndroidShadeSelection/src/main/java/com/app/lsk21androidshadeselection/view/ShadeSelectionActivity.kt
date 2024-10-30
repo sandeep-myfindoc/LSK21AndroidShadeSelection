@@ -483,7 +483,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private fun addDirectionalLight(intensity: Float){
         arFragment.arSceneView.scene.removeChild(lightNode)
         var pointLight = Light.builder(Light.Type.DIRECTIONAL)
-            //.setColor(Color(1.0f,1.0f,1.0f))
+            .setColor(Color(1.0f,1.0f,1.0f))
             .setShadowCastingEnabled(false)
             .setIntensity(intensity)
             .build()
@@ -502,7 +502,9 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                     }
                     placeAtYAxis(node)
                 }
-
+                if(cntOfMannualSelection==0){
+                    binding.btnSubmit.visibility = View.GONE
+                }
                 return
             }
             if(cntOfMannualSelection==3){
@@ -513,6 +515,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                     selectedShades.add(shadeCode)
                     cntOfMannualSelection++
                     shiftYAxis(node)
+                    binding.btnSubmit.visibility = View.VISIBLE
                 }
             }else{
                 showToast("Sorry, you have reached maximum limit")
@@ -867,30 +870,10 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     var sensorListener = object: SensorEventListener{
         override fun onSensorChanged(event: SensorEvent?) {
             mLightQuantity = event!!.values[0]
-            //showToast(mLightQuantity.toString())
-            /*if(!isFirstTime){
-                return
-            }
-            isFirstTime = false
-            handler.postDelayed(object : Runnable {
-                override fun run() {
-                    if(event.sensor.type == Sensor.TYPE_LIGHT){
-                        var temp = (mLightQuantity/5.0f).toFloat()
-                        if(temp<15.0f){
-                            addPointLight(temp)
-                        }else{
-                            addPointLight(15.0f)
-                        }
-                        //addDirectionalLight(mLightQuantity)//
-                        showToast("Intensity is : ".plus(mLightQuantity.toString()))
-                    }
-                    handler.postDelayed(this, delay.toLong())
-                }
-            }, delay.toLong())*/
             if(event?.sensor?.type == Sensor.TYPE_LIGHT){
                 var temp = (mLightQuantity/5.0f).toFloat()
                 //showToast("DIM      ".plus(temp.toString()))
-                if(temp>=11.0f){
+                /*if(temp>=11.0f){
                     addDirectionalLight(600f)
                 }
                 else if(temp>=10.0f){
@@ -900,23 +883,28 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                     addDirectionalLight(595f)
                 }
                 else if(temp>=8.0f){
-                    //addDirectionalLight(585f)
+                    addDirectionalLight(585f)
                 }else if(temp >= 7.0f){
                     addDirectionalLight(590f)
                 }else if(temp >= 6.0f){
-                    //addDirectionalLight(575f)
+                    addDirectionalLight(575f)
                 }else if(temp >= 5.0f){
                     addDirectionalLight(585f)
                 }else if(temp >= 4.0f){
-                    //addDirectionalLight(565f)
+                    addDirectionalLight(565f)
                 }else if(temp >= 3.0f){
                     addDirectionalLight(580f)
                 }else if(temp >= 2.0f){
-                    //addDirectionalLight(555f)
+                    addDirectionalLight(575f)
                 }else if(temp >= 1.0f){
                     addDirectionalLight(0.0f)
                 }else{
                     addDirectionalLight(0.0f)
+                }*/
+                if(temp<=2.0){
+                    addDirectionalLight(0.0f)
+                }else{
+                    addDirectionalLight(600.0f)
                 }
             }
         }

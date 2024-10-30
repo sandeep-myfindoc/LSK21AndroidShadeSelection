@@ -80,7 +80,7 @@
                 android:textSize="17dp"
                 android:textAllCaps="false"
                 android:textStyle="bold"
-                android:visibility="invisible"
+                android:visibility="gone"
                 android:onClick="moveForward"
                 android:textColor="#ffffff"
                 android:background="@drawable/drawable_corner_shadow"
