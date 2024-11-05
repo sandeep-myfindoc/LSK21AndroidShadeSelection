@@ -95,6 +95,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private var cntRightMove = 0
     private var cntLeftMove = 0
     val lightNode = Node()
+    val pointLightNode = Node()
     private var session: Session? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -116,9 +117,9 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                     "modal/textures/CB".plus(cnt).plus("_BaseColor.png")))
             }
             cnt = 1
-            for(cnt in 1..7){
-                modelFiles.add(ModalToParse("model/LS".plus(cnt).plus(".glb"),
-                    "modal/textures/LS".plus(cnt).plus("_BaseColor.png")))
+            for(cnt in 1..3){
+                modelFiles.add(ModalToParse("model/YS".plus(cnt).plus(".glb"),
+                    "modal/textures/YS".plus(cnt).plus("_BaseColor.png")))
             }
             cnt = 1
             for(cnt in 1..5){
@@ -126,9 +127,9 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                     "modal/textures/MS".plus(cnt).plus("_BaseColor.png")))
             }
             cnt = 1
-            for(cnt in 1..3){
-                modelFiles.add(ModalToParse("model/YS".plus(cnt).plus(".glb"),
-                    "modal/textures/YS".plus(cnt).plus("_BaseColor.png")))
+            for(cnt in 1..7){
+                modelFiles.add(ModalToParse("model/LS".plus(cnt).plus(".glb"),
+                    "modal/textures/LS".plus(cnt).plus("_BaseColor.png")))
             }
             // Load 3D Modal
             /*GlobalScope.launch(Dispatchers.Main){
@@ -174,6 +175,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         }
         mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         mLightSensor = mSensorManager?.getDefaultSensor(Sensor.TYPE_LIGHT);
+        //addPointLight(5.0f)
         addDirectionalLight(600f)
         binding.swFlash.setOnCheckedChangeListener(checkedListener)
         //arFragment.arSceneView.scene.sunlight?.light?.intensity = 700f
@@ -245,10 +247,12 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                     .build())
                 .build()
                 .thenAccept { renderable ->
-                    /*val ambientColor = Color(1.0f, 1.0f, 1.0f)
-                    renderable.material.setFloat("metallic", 1.0f);
-                    renderable.material.setFloat("roughness", 0.1f);
-                    renderable?.material?.setFloat3("ambientColor", ambientColor)*/
+                    val ambientColor = Color(1.0f, 1.0f, 1.0f)
+                    //renderable.material.setFloat("metallic", 0.5f);
+                    //renderable.material.setFloat("roughness", 0.1f);
+                    //renderable?.material?.setFloat3("ambientColor", ambientColor)
+                    //renderable?.material?.setFloat3("emissiveColor",Color(1.5f,1.5f,1.5f))
+                    //renderable?.material?.setFloat("emissiveIntensity",1.0f)
                     renderable.isShadowCaster = false
                     renderable.isShadowReceiver = false
                     var temp = TransformableNode(arFragment.transformationSystem)
@@ -466,25 +470,24 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         val floatArray: Array<Float> = arrayOf(averageRed.toFloat(), averageGreen.toFloat(), averageBlue.toFloat())
         return floatArray
     }
-    private fun addPointLight(intensity: Float){//: Light {//temp: FloatArray
+    private fun addPointLight(intensity: Float){
         var pointLight = Light.builder(Light.Type.POINT)
-            //.setColor(Color(1.0f,1.0f,1.0f))
-            //.setColorTemperature(2000f)
+            .setColor(Color(1.0f,1.0f,1.0f))
             .setShadowCastingEnabled(false)
             .setIntensity(intensity)
-            //.setFalloffRadius(2.0f)
+            .setFalloffRadius(2.0f)
             .build()
-        //return pointLight
-        val lightNode = Node()
-        lightNode.light = pointLight
+
+        pointLightNode.light = pointLight
         //lightNode.worldPosition = Vector3(1f,0f,0f)
-        lightNode.setParent(arFragment.arSceneView.scene)
+        pointLightNode.setParent(arFragment.arSceneView.scene)
     }
     private fun addDirectionalLight(intensity: Float){
         arFragment.arSceneView.scene.removeChild(lightNode)
         var pointLight = Light.builder(Light.Type.DIRECTIONAL)
             .setColor(Color(1.0f,1.0f,1.0f))
             .setShadowCastingEnabled(false)
+            .setFalloffRadius(2.0f)
             .setIntensity(intensity)
             .build()
         lightNode.light = pointLight

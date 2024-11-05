@@ -71,13 +71,13 @@
             <Button
                 android:layout_centerVertical="true"
                 android:id="@+id/btnSubmit"
-                android:layout_width="wrap_content"
+                android:layout_width="106dp"
                 android:layout_height="wrap_content"
                 android:paddingLeft="3dp"
                 android:paddingRight="3dp"
                 android:layout_alignParentRight="true"
                 android:text="Submit"
-                android:textSize="17dp"
+                android:textSize="18dp"
                 android:textAllCaps="false"
                 android:textStyle="bold"
                 android:visibility="gone"
@@ -114,9 +114,10 @@
                 android:onClick="moveLeft"
                 android:gravity="center"
                 android:background="@drawable/drawable_corner_shadow"
-                android:layout_width="55dp"
-                android:layout_height="55dp">
+                android:layout_width="51dp"
+                android:layout_height="51dp">
                 <ImageView
+                    android:padding="4dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/backward">
@@ -128,9 +129,10 @@
                 android:onClick="moveRight"
                 android:gravity="center"
                 android:background="@drawable/drawable_corner_shadow"
-                android:layout_width="55dp"
-                android:layout_height="55dp">
+                android:layout_width="51dp"
+                android:layout_height="51dp">
                 <ImageView
+                    android:padding="4dp"
                     android:src="@drawable/forward"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content">
@@ -158,6 +160,7 @@
                 android:layout_centerVertical="true"
                 android:id="@+id/btnAiIcon"
                 android:src="@drawable/ai_icon"
+                android:background="@drawable/drawable_round_corner_shadow"
                 android:onClick="fetchShade"
                 android:layout_alignParentRight="true"
                 android:layout_width="wrap_content"
