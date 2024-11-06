@@ -76,7 +76,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private val shiftYAxis: Float = 0.004f
     private val minScale: Float = 0.05f
     private val maxScale: Float = 1.60f
-    private val zoomAbleScale: Float = 2.10f
+    private val zoomAbleScale: Float = 1.95f
     private lateinit var viewModel: ShadeSelectionViewModel
     val modelNode: HashMap<String, TransformableNode> = HashMap()
     val renderableList = arrayListOf<ModelRenderable>()
@@ -97,6 +97,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     val lightNode = Node()
     val pointLightNode = Node()
     private var session: Session? = null
+    private val defaultIntensity: Float = 550.0f
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
@@ -175,8 +176,9 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         }
         mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         mLightSensor = mSensorManager?.getDefaultSensor(Sensor.TYPE_LIGHT);
-        //addPointLight(5.0f)
-        addDirectionalLight(600f)
+        addPointLight(5.0f)
+        addDirectionalLight(defaultIntensity)
+        updateModalBasedOnLight()
         binding.swFlash.setOnCheckedChangeListener(checkedListener)
         //arFragment.arSceneView.scene.sunlight?.light?.intensity = 700f
     //arFragment.transformationSystem.selectionVisualizer = BlanckSelectionVisualizer()
@@ -225,7 +227,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     }
     override fun onResume() {
         super.onResume()
-        mSensorManager?.registerListener(sensorListener,mLightSensor,SensorManager.SENSOR_DELAY_FASTEST)
+       mSensorManager?.registerListener(sensorListener,mLightSensor,SensorManager.SENSOR_DELAY_FASTEST)
     }
 
     override fun onDestroy() {
@@ -248,7 +250,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                 .build()
                 .thenAccept { renderable ->
                     val ambientColor = Color(1.0f, 1.0f, 1.0f)
-                    //renderable.material.setFloat("metallic", 0.5f);
+                    //renderable.material.setFloat("metallic", 0.0f);
                     //renderable.material.setFloat("roughness", 0.1f);
                     //renderable?.material?.setFloat3("ambientColor", ambientColor)
                     //renderable?.material?.setFloat3("emissiveColor",Color(1.5f,1.5f,1.5f))
@@ -279,9 +281,13 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             if(frame!=null){
                 val lightEstimate = frame.lightEstimate
                 if(lightEstimate!=null){
+
                     val ambientIntensity: Float = lightEstimate.pixelIntensity
                     val color = getColorFromAmbientIntensity(ambientIntensity)
-                    updateMaterialColor(color)
+                    var colorArray: FloatArray = updateMaterialColor(color)
+                    //showToast("Intensity is: ".plus(ambientIntensity.toString()))
+                    arFragment.arSceneView.scene.sunlight?.light?.intensity = ambientIntensity
+                    arFragment.arSceneView.scene.sunlight?.light?.color = Color(colorArray[0],colorArray[1],colorArray[2])
                 }
             }
         }
@@ -290,18 +296,19 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         val r = min((intensity * 2.55).toInt().toDouble(), 255.0).toInt()
         return android.graphics.Color.rgb(r, r, r)
     }
-    private fun updateMaterialColor(lightColor: Int){
+    private fun updateMaterialColor(lightColor: Int): FloatArray {
         val rgb = floatArrayOf(
             ((lightColor shr 16) and 0xFF) / 255.0f,
             ((lightColor shr 8) and 0xFF) / 255.0f,
             (lightColor and 0xFF) / 255.0f
         )
         //addPointLight(rgb)
-        Log.e("RGB color is: ",rgb[0].toString().plus(" : ").plus(rgb[1].toString()).plus(" : ").plus(rgb[2].toString()))
+        /*Log.e("RGB color is: ",rgb[0].toString().plus(" : ").plus(rgb[1].toString()).plus(" : ").plus(rgb[2].toString()))
         for(item in renderableList){
             var material = item.material
             material.setFloat3("baseColor", Color(rgb[0],rgb[1],rgb[2]))
-        }
+        }*/
+        return rgb
     }
     private fun writeFileToMediaStore(fileName: String, content: String) {
         // Prepare the ContentValues to define the file
@@ -472,7 +479,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     }
     private fun addPointLight(intensity: Float){
         var pointLight = Light.builder(Light.Type.POINT)
-            .setColor(Color(1.0f,1.0f,1.0f))
+            //.setColor(Color(1.0f,1.0f,1.0f))
             .setShadowCastingEnabled(false)
             .setIntensity(intensity)
             .setFalloffRadius(2.0f)
@@ -485,7 +492,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private fun addDirectionalLight(intensity: Float){
         arFragment.arSceneView.scene.removeChild(lightNode)
         var pointLight = Light.builder(Light.Type.DIRECTIONAL)
-            .setColor(Color(1.0f,1.0f,1.0f))
+            //.setColor(Color(1.0f,1.0f,1.0f))
             .setShadowCastingEnabled(false)
             .setFalloffRadius(2.0f)
             .setIntensity(intensity)
@@ -907,7 +914,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                 if(temp<=2.0){
                     addDirectionalLight(0.0f)
                 }else{
-                    addDirectionalLight(600.0f)
+                    addDirectionalLight(defaultIntensity)
                 }
             }
         }
