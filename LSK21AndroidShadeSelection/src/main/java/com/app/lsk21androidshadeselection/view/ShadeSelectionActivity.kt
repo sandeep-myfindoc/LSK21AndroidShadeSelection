@@ -34,6 +34,7 @@ import com.app.lsk21androidshadeselection.util.YuvToRgbConverter
 import com.app.teethdetectioncameralibrary.viewModel.ShadeSelectionViewModel
 import com.google.ar.core.ArCoreApk
 import com.google.ar.core.Config
+import com.google.ar.core.Frame
 import com.google.ar.core.Session
 import com.google.ar.core.exceptions.DeadlineExceededException
 import com.google.ar.core.exceptions.NotYetAvailableException
@@ -97,7 +98,9 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     val lightNode = Node()
     val pointLightNode = Node()
     private var session: Session? = null
-    private val defaultIntensity: Float = 550.0f
+    private val defaultIntensity: Float = 580.0f
+    private val minIntensity: Float = 500.0f
+    private val multiplier = 1500
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
@@ -227,7 +230,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     }
     override fun onResume() {
         super.onResume()
-       mSensorManager?.registerListener(sensorListener,mLightSensor,SensorManager.SENSOR_DELAY_FASTEST)
+       //mSensorManager?.registerListener(sensorListener,mLightSensor,SensorManager.SENSOR_DELAY_FASTEST)
     }
 
     override fun onDestroy() {
@@ -250,13 +253,13 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                 .build()
                 .thenAccept { renderable ->
                     val ambientColor = Color(1.0f, 1.0f, 1.0f)
-                    //renderable.material.setFloat("metallic", 0.0f);
-                    //renderable.material.setFloat("roughness", 0.1f);
+                    //renderable.material.setFloat("MATERIAL_REFLECTANCE", 1.0f);//metallic-0-1,0.5
+                    //renderable.material.setFloat("MATERIAL_ROUGHNESS", 1.0f);//roughness,0.4
                     //renderable?.material?.setFloat3("ambientColor", ambientColor)
                     //renderable?.material?.setFloat3("emissiveColor",Color(1.5f,1.5f,1.5f))
                     //renderable?.material?.setFloat("emissiveIntensity",1.0f)
-                    renderable.isShadowCaster = false
-                    renderable.isShadowReceiver = false
+                    renderable.isShadowCaster = false   // Prevent the object from casting shadows
+                    renderable.isShadowReceiver = false // Prevent the object from receiving shadows
                     var temp = TransformableNode(arFragment.transformationSystem)
                     modelNode[fetchCode(modelData.texturePath)] = temp
                     renderableList.add(renderable)
@@ -283,11 +286,32 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                 if(lightEstimate!=null){
 
                     val ambientIntensity: Float = lightEstimate.pixelIntensity
-                    val color = getColorFromAmbientIntensity(ambientIntensity)
-                    var colorArray: FloatArray = updateMaterialColor(color)
-                    //showToast("Intensity is: ".plus(ambientIntensity.toString()))
-                    arFragment.arSceneView.scene.sunlight?.light?.intensity = ambientIntensity
-                    arFragment.arSceneView.scene.sunlight?.light?.color = Color(colorArray[0],colorArray[1],colorArray[2])
+                    val colorCorrection = floatArrayOf(0.0f, 0.0f, 0.0f, 0.0f)
+                    lightEstimate.getColorCorrection(colorCorrection,0)
+                    lightEstimate.environmentalHdrMainLightIntensity
+                    lightEstimate.environmentalHdrMainLightDirection
+                    val harmonics = lightEstimate.environmentalHdrAmbientSphericalHarmonics
+                    lightEstimate.acquireEnvironmentalHdrCubeMap()
+                    var temp = ambientIntensity * multiplier
+                    if(temp>defaultIntensity){
+                        addDirectionalLight(defaultIntensity,Color(colorCorrection[0],colorCorrection[1],colorCorrection[2],colorCorrection[3]),frame)//Color(colorArray[0],colorArray[1],colorArray[2])
+                    }else{
+                        if(temp<50){
+                            addDirectionalLight(0.0f,Color(colorCorrection[0],colorCorrection[1],colorCorrection[2],colorCorrection[3]),frame)//Color(colorArray[0],colorArray[1],colorArray[2])
+                        }else{
+                            if(temp>minIntensity){
+                                addDirectionalLight(minIntensity,Color(colorCorrection[0],colorCorrection[1],colorCorrection[2],colorCorrection[3]),frame)//Color(colorArray[0],colorArray[1],colorArray[2])
+                            }else{
+                                addDirectionalLight(temp,Color(colorCorrection[0],colorCorrection[1],colorCorrection[2],colorCorrection[3]),frame)//Color(colorArray[0],colorArray[1],colorArray[2])
+                            }
+                        }
+                    }
+
+                    //pointLight.setIntensity(ambientIntensity)
+                    //pointLight.setColor(Color(colorArray[0],colorArray[1],colorArray[2]))
+                     //addDirectionalLight(ambientIntensity,Color(1.0f,1.0f,1.0f))
+                    //addPointLight(ambientIntensity,Color(1.0f,1.0f,1.0f))
+
                 }
             }
         }
@@ -480,6 +504,18 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private fun addPointLight(intensity: Float){
         var pointLight = Light.builder(Light.Type.POINT)
             //.setColor(Color(1.0f,1.0f,1.0f))
+            //.setShadowCastingEnabled(false)
+            .setIntensity(intensity)
+            .setFalloffRadius(2.0f)
+            .build()
+
+        pointLightNode.light = pointLight
+        //lightNode.worldPosition = Vector3(1f,0f,0f)
+        pointLightNode.setParent(arFragment.arSceneView.scene)
+    }
+    private fun addPointLight(intensity: Float,color: Color){
+        var pointLight = Light.builder(Light.Type.POINT)
+            .setColor(color)
             .setShadowCastingEnabled(false)
             .setIntensity(intensity)
             .setFalloffRadius(2.0f)
@@ -489,16 +525,50 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         //lightNode.worldPosition = Vector3(1f,0f,0f)
         pointLightNode.setParent(arFragment.arSceneView.scene)
     }
+    private fun addDirectionalLight(intensity: Float,color: Color,frame: Frame){
+        try{
+            arFragment.arSceneView.scene.removeChild(lightNode)
+            var directionLight = Light.builder(Light.Type.DIRECTIONAL)
+                .setColor(color)
+                //.setShadowCastingEnabled(true)
+                //.setFalloffRadius(2.0f)
+                .setIntensity(intensity)
+                .build()
+            lightNode.light = directionLight
+             lightNode.localRotation = arFragment.arSceneView.scene.camera.localRotation
+            //lightNode.worldPosition = Vector3(0.0f,-1.0f,0.0f) // Place the light high above
+            //lightNode.setLookDirection(Vector3(0.0f,0.0f,0.0f))//Point the light directly downward towards the origin
+            lightNode.setParent(arFragment.arSceneView.scene)
+            /*val cameraPosition = arFragment.arSceneView.scene.camera.worldPosition
+            val lighPosition = lightNode.worldPosition
+            val direction = Vector3.subtract(cameraPosition,lighPosition)
+            val lookRotaion = Quaternion.lookRotation(direction,Vector3.up())
+            lightNode.worldRotation = lookRotaion*/
+        }catch(ex: Throwable){
+            showToast(ex.message.toString())
+        }catch (ex: Exception){
+            showToast(ex.message.toString())
+        }
+    }
     private fun addDirectionalLight(intensity: Float){
-        arFragment.arSceneView.scene.removeChild(lightNode)
-        var pointLight = Light.builder(Light.Type.DIRECTIONAL)
-            //.setColor(Color(1.0f,1.0f,1.0f))
-            .setShadowCastingEnabled(false)
-            .setFalloffRadius(2.0f)
-            .setIntensity(intensity)
-            .build()
-        lightNode.light = pointLight
-        lightNode.setParent(arFragment.arSceneView.scene)
+        try{
+            //arFragment.arSceneView.scene.removeChild(lightNode)
+            var directionLight = Light.builder(Light.Type.DIRECTIONAL)
+                //.setColor(Color(1.0f,1.0f,1.0f))
+                //.setShadowCastingEnabled(false)
+                //.setFalloffRadius(2.0f)
+                .setIntensity(intensity)
+                .build()
+            lightNode.light = directionLight
+            lightNode.localRotation = arFragment.arSceneView.scene.camera.localRotation
+            //lightNode.worldPosition = Vector3(0.0f,-1.0f,0.0f)// Place the light high above
+            //lightNode.setLookDirection(Vector3(0.0f,0.0f,0.0f))// Point the light directly downward towards the origin
+            lightNode.setParent(arFragment.arSceneView.scene)
+        }catch (ex: Throwable){
+            showToast(ex.message.toString())
+        }catch (ex: Exception){
+            showToast(ex.message.toString())
+        }
     }
     private fun onModelClicked(node: TransformableNode) {
         if (node != null) {

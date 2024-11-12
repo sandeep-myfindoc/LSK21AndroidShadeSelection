@@ -51,7 +51,7 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     /*ScenceForm*/
-    implementation ("com.google.ar:core:1.45.0")
+    implementation ("com.google.ar:core:1.46.0")
     implementation ("com.google.ar.sceneform:core:1.17.1")
     implementation ("com.google.ar.sceneform:assets:1.17.1")
     implementation("com.google.ar.sceneform.ux:sceneform-ux:1.17.1")
