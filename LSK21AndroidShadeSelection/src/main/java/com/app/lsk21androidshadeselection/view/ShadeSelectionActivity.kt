@@ -98,7 +98,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     val lightNode = Node()
     val pointLightNode = Node()
     private var session: Session? = null
-    private val defaultIntensity: Float = 580.0f
+    private val defaultIntensity: Float = 550.0f
     private val minIntensity: Float = 500.0f
     private val multiplier = 1500
     override fun onCreate(savedInstanceState: Bundle?) {
