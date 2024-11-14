@@ -118,22 +118,22 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             var cnt = 1
             for(cnt in 1..5){
                 modelFiles.add(ModalToParse("model/CB".plus(cnt).plus(".glb"),
-                    "modal/textures/CB".plus(cnt).plus("_BaseColor.png")))
+                    "model/textures/CB".plus(cnt).plus("_BaseColor.png")))
             }
             cnt = 1
             for(cnt in 1..3){
                 modelFiles.add(ModalToParse("model/YS".plus(cnt).plus(".glb"),
-                    "modal/textures/YS".plus(cnt).plus("_BaseColor.png")))
+                    "model/textures/YS".plus(cnt).plus("_BaseColor.png")))
             }
             cnt = 1
             for(cnt in 1..5){
                 modelFiles.add(ModalToParse("model/MS".plus(cnt).plus(".glb"),
-                    "modal/textures/MS".plus(cnt).plus("_BaseColor.png")))
+                    "model/textures/MS".plus(cnt).plus("_BaseColor.png")))
             }
             cnt = 1
             for(cnt in 1..7){
                 modelFiles.add(ModalToParse("model/LS".plus(cnt).plus(".glb"),
-                    "modal/textures/LS".plus(cnt).plus("_BaseColor.png")))
+                    "model/textures/LS".plus(cnt).plus("_BaseColor.png")))
             }
             // Load 3D Modal
             /*GlobalScope.launch(Dispatchers.Main){
