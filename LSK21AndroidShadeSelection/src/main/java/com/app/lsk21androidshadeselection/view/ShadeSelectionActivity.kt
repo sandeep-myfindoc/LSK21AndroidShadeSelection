@@ -118,22 +118,22 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             var cnt = 1
             for(cnt in 1..5){
                 modelFiles.add(ModalToParse("model/CB".plus(cnt).plus(".glb"),
-                    "modal/textures/CB".plus(cnt).plus("_BaseColor.png")))
+                    "model/textures/CB".plus(cnt).plus("_BaseColor.png")))
             }
             cnt = 1
             for(cnt in 1..3){
                 modelFiles.add(ModalToParse("model/YS".plus(cnt).plus(".glb"),
-                    "modal/textures/YS".plus(cnt).plus("_BaseColor.png")))
+                    "model/textures/YS".plus(cnt).plus("_BaseColor.png")))
             }
             cnt = 1
             for(cnt in 1..5){
                 modelFiles.add(ModalToParse("model/MS".plus(cnt).plus(".glb"),
-                    "modal/textures/MS".plus(cnt).plus("_BaseColor.png")))
+                    "model/textures/MS".plus(cnt).plus("_BaseColor.png")))
             }
             cnt = 1
             for(cnt in 1..7){
                 modelFiles.add(ModalToParse("model/LS".plus(cnt).plus(".glb"),
-                    "modal/textures/LS".plus(cnt).plus("_BaseColor.png")))
+                    "model/textures/LS".plus(cnt).plus("_BaseColor.png")))
             }
             // Load 3D Modal
             /*GlobalScope.launch(Dispatchers.Main){
@@ -179,8 +179,8 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         }
         mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         mLightSensor = mSensorManager?.getDefaultSensor(Sensor.TYPE_LIGHT);
-        addPointLight(5.0f)
-        addDirectionalLight(defaultIntensity)
+        //addPointLight(5.0f)
+        //addDirectionalLight(defaultIntensity)
         updateModalBasedOnLight()
         binding.swFlash.setOnCheckedChangeListener(checkedListener)
         //arFragment.arSceneView.scene.sunlight?.light?.intensity = 700f
@@ -300,9 +300,9 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                             addDirectionalLight(0.0f,Color(colorCorrection[0],colorCorrection[1],colorCorrection[2],colorCorrection[3]),frame)//Color(colorArray[0],colorArray[1],colorArray[2])
                         }else{
                             if(temp>minIntensity){
-                                addDirectionalLight(minIntensity,Color(colorCorrection[0],colorCorrection[1],colorCorrection[2],colorCorrection[3]),frame)//Color(colorArray[0],colorArray[1],colorArray[2])
-                            }else{
                                 addDirectionalLight(temp,Color(colorCorrection[0],colorCorrection[1],colorCorrection[2],colorCorrection[3]),frame)//Color(colorArray[0],colorArray[1],colorArray[2])
+                            }else{
+                                addDirectionalLight(minIntensity,Color(colorCorrection[0],colorCorrection[1],colorCorrection[2],colorCorrection[3]),frame)//Color(colorArray[0],colorArray[1],colorArray[2])
                             }
                         }
                     }

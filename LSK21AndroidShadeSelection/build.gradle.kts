@@ -55,6 +55,7 @@ dependencies {
     implementation ("com.google.ar.sceneform:core:1.17.1")
     implementation ("com.google.ar.sceneform:assets:1.17.1")
     implementation("com.google.ar.sceneform.ux:sceneform-ux:1.17.1")
+    implementation ("com.github.AtifSayings:CircularImageView:1.0.2")
 
     /*Retrofit */
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")

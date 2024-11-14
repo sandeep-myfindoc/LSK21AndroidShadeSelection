@@ -81,7 +81,7 @@
                 android:textSize="18dp"
                 android:textAllCaps="false"
                 android:textStyle="bold"
-                android:visibility="visible"
+                android:visibility="gone"
                 android:onClick="moveForward"
                 android:textColor="#ffffff"
                 android:background="@drawable/drawable_corner_shadow"
@@ -143,7 +143,7 @@
         <!-- layout for AI & switch -->
         <RelativeLayout
             android:id="@+id/layoutAI"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="7dp"
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
             android:layout_below="@id/layoutArrows"
@@ -157,16 +157,21 @@
                 app:checked="false"
                 app:color_off="#ffffff"
                 app:color_on="#92AEC4" />
-            <ImageView
+            <com.blogspot.atifsoftwares.circularimageview.CircularImageView
                 android:layout_centerVertical="true"
                 android:id="@+id/btnAiIcon"
                 android:src="@drawable/ai_icon"
-                android:background="@drawable/drawable_round_corner_shadow"
                 android:onClick="fetchShade"
                 android:layout_alignParentRight="true"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-            </ImageView>
+                android:layout_width="58dp"
+                android:layout_height="58dp"
+                app:c_border="false"
+                app:c_shadow="true"
+                app:c_shadow_color="#1A000000"
+                app:c_shadow_gravity="bottom"
+                app:c_shadow_radius="4.0"
+                >
+            </com.blogspot.atifsoftwares.circularimageview.CircularImageView>
         </RelativeLayout>
     </RelativeLayout>
 </layout>
