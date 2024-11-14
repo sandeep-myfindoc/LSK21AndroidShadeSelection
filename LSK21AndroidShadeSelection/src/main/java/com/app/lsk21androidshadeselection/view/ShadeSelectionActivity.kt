@@ -179,8 +179,8 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         }
         mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         mLightSensor = mSensorManager?.getDefaultSensor(Sensor.TYPE_LIGHT);
-        addPointLight(5.0f)
-        addDirectionalLight(defaultIntensity)
+        //addPointLight(5.0f)
+        //addDirectionalLight(defaultIntensity)
         updateModalBasedOnLight()
         binding.swFlash.setOnCheckedChangeListener(checkedListener)
         //arFragment.arSceneView.scene.sunlight?.light?.intensity = 700f
@@ -300,9 +300,9 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                             addDirectionalLight(0.0f,Color(colorCorrection[0],colorCorrection[1],colorCorrection[2],colorCorrection[3]),frame)//Color(colorArray[0],colorArray[1],colorArray[2])
                         }else{
                             if(temp>minIntensity){
-                                addDirectionalLight(minIntensity,Color(colorCorrection[0],colorCorrection[1],colorCorrection[2],colorCorrection[3]),frame)//Color(colorArray[0],colorArray[1],colorArray[2])
-                            }else{
                                 addDirectionalLight(temp,Color(colorCorrection[0],colorCorrection[1],colorCorrection[2],colorCorrection[3]),frame)//Color(colorArray[0],colorArray[1],colorArray[2])
+                            }else{
+                                addDirectionalLight(minIntensity,Color(colorCorrection[0],colorCorrection[1],colorCorrection[2],colorCorrection[3]),frame)//Color(colorArray[0],colorArray[1],colorArray[2])
                             }
                         }
                     }
