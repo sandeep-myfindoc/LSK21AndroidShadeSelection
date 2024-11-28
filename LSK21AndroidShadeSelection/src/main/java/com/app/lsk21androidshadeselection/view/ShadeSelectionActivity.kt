@@ -109,14 +109,12 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         }
         arFragment = supportFragmentManager.findFragmentById(R.id.sceneform_fragment) as ArFragment
         //viewModel = ViewModelProvider(this).get(ShadeSelectionViewModel::class.java)
-        /* sandeep
         arFragment.planeDiscoveryController.hide()
         arFragment.planeDiscoveryController.setInstructionView(null)
-        arFragment.arSceneView.planeRenderer.isVisible = false*/
+        arFragment.arSceneView.planeRenderer.isVisible = false
         lightNode.setParent(arFragment.arSceneView.scene)
         checkPermission()
         try{
-            /* sandeep
             var cnt = 1
             for(cnt in 1..5){
                 modelFiles.add(ModalToParse("model/CB".plus(cnt).plus(".glb"),
@@ -136,17 +134,16 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             for(cnt in 1..7){
                 modelFiles.add(ModalToParse("model/LS".plus(cnt).plus(".glb"),
                     "model/textures/LS".plus(cnt).plus("_BaseColor.png")))
-            }*/
+            }
         }catch(ex: Exception){
             ex.printStackTrace()
         }
-        /* sandeep
         GlobalScope.launch(Dispatchers.Main) {
             binding.btnAiIcon.isEnabled = false
             loadNextModel()
         }
         updateModalBasedOnLight()
-        binding.swFlash.setOnCheckedChangeListener(checkedListener)*/
+        binding.swFlash.setOnCheckedChangeListener(checkedListener)
     }
     private fun checkArCoreAvailability(): Boolean{
         val arCoreAvailability = ArCoreApk.getInstance().checkAvailability(this)
