@@ -108,13 +108,15 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             finish()
         }
         arFragment = supportFragmentManager.findFragmentById(R.id.sceneform_fragment) as ArFragment
-        viewModel = ViewModelProvider(this).get(ShadeSelectionViewModel::class.java)
+        //viewModel = ViewModelProvider(this).get(ShadeSelectionViewModel::class.java)
+        /* sandeep
         arFragment.planeDiscoveryController.hide()
         arFragment.planeDiscoveryController.setInstructionView(null)
-        arFragment.arSceneView.planeRenderer.isVisible = false
+        arFragment.arSceneView.planeRenderer.isVisible = false*/
         lightNode.setParent(arFragment.arSceneView.scene)
         checkPermission()
         try{
+            /* sandeep
             var cnt = 1
             for(cnt in 1..5){
                 modelFiles.add(ModalToParse("model/CB".plus(cnt).plus(".glb"),
@@ -134,57 +136,17 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             for(cnt in 1..7){
                 modelFiles.add(ModalToParse("model/LS".plus(cnt).plus(".glb"),
                     "model/textures/LS".plus(cnt).plus("_BaseColor.png")))
-            }
-            // Load 3D Modal
-            /*GlobalScope.launch(Dispatchers.Main){
-                modelFiles.forEach { modelToParse ->
-                    loadModelAsync(modelToParse.modelPath).thenAccept { renderable ->
-                        loadTextureAsync(modelToParse.texturePath).thenAccept {texture->
-                            loadRoughnessAsync("modal/textures/Tab_Tooth_Roughness.png").thenAccept { roughnessTexture ->
-                                loadMetalicAsync("modal/textures/Tab_Tooth_Metallic.png").thenAccept { metallicTexture ->
-                                    if (renderable != null) {
-                                        runOnUiThread {
-                                            val ambientColor = Color(0.5f, 0.5f, 0.5f)
-                                            renderable?.material?.setTexture("baseColor", texture)
-                                            renderable?.material?.setTexture("metallic", metallicTexture)// metallicTexture
-                                            renderable?.material?.setTexture("roughness", roughnessTexture)//roughnessTexture
-                                            //renderable?.material?.setFloat3("ambientColor", ambientColor)
-                                            renderable?.material?.setFloat3("baseColorFactor", Color(1.0f, 1.0f, 1.0f))
-                                            renderable.isShadowCaster = false
-                                            renderable.isShadowReceiver = false
-                                            var temp = TransformableNode(arFragment.transformationSystem)
-                                            modelNode[fetchCode(modelToParse.texturePath)] = temp
-                                            renderableList.add(renderable)
-                                            addModelToScene(renderable,x,temp)
-                                            x += 0.0067f//0.006
-                                        }
-                                    }
-                                }
-
-                            }
-
-                        }
-
-                    }
-                }
             }*/
         }catch(ex: Exception){
             ex.printStackTrace()
         }
-        //observeData()
-        //updateModalBasedOnLight()
+        /* sandeep
         GlobalScope.launch(Dispatchers.Main) {
             binding.btnAiIcon.isEnabled = false
             loadNextModel()
         }
-        mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
-        mLightSensor = mSensorManager?.getDefaultSensor(Sensor.TYPE_LIGHT);
-        //addPointLight(5.0f)
-        //addDirectionalLight(defaultIntensity)
         updateModalBasedOnLight()
-        binding.swFlash.setOnCheckedChangeListener(checkedListener)
-        //arFragment.arSceneView.scene.sunlight?.light?.intensity = 700f
-    //arFragment.transformationSystem.selectionVisualizer = BlanckSelectionVisualizer()
+        binding.swFlash.setOnCheckedChangeListener(checkedListener)*/
     }
     private fun checkArCoreAvailability(): Boolean{
         val arCoreAvailability = ArCoreApk.getInstance().checkAvailability(this)
@@ -230,12 +192,10 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     }
     override fun onResume() {
         super.onResume()
-       //mSensorManager?.registerListener(sensorListener,mLightSensor,SensorManager.SENSOR_DELAY_FASTEST)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        mSensorManager?.unregisterListener(sensorListener)
     }
     private fun checkPermission(){
         if(ContextCompat.checkSelfPermission(this@ShadeSelectionActivity,android.Manifest.permission.CAMERA)==PackageManager.PERMISSION_GRANTED){
@@ -356,7 +316,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             Toast.makeText(this, "Failed to create file", Toast.LENGTH_SHORT).show()
         }
     }
-    private fun observeData(){
+    /*private fun observeData(){
         viewModel.errMessage.observe(this@ShadeSelectionActivity, Observer {
             if(it.toString().isNotEmpty()){
                 showToast(it.toString())
@@ -365,7 +325,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         })
         viewModel.teetShadeResponseLiveData.observe(this@ShadeSelectionActivity, Observer {
             if(it.status.toString().equals("1")){
-                /*writeFileToMediaStore("Log.txt", it.toString())*/
+                writeFileToMediaStore("Log.txt", it.toString())
                 if(it.colorRecommendation!=null && it.colorRecommendation.color1!=null){
                     selectedShades.add(it.colorRecommendation.color1.shadeCode)
                     updateOnBasisOfShadeCode(it.colorRecommendation.color1.shadeCode)
@@ -376,7 +336,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                 }
                 if(it.colorRecommendation!=null && it.colorRecommendation.color3!=null){
                     selectedShades.add(it.colorRecommendation.color3.shadeCode)
-                    //Toast.makeText(this@ShadeSelectionActivity,"Respose Received: ".plus(it.colorRecommendation.color3.shadeCode.toString()),Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@ShadeSelectionActivity,"Respose Received: ".plus(it.colorRecommendation.color3.shadeCode.toString()),Toast.LENGTH_LONG).show()
                     updateOnBasisOfShadeCode(it.colorRecommendation.color3.shadeCode)
                 }
                 binding.btnSubmit.visibility = View.VISIBLE
@@ -387,7 +347,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                 binding.layoutMsg.visibility = View.GONE
             }
         })
-    }
+    }*/
     private fun loadTextureAsync(modelUri: String): CompletableFuture<Texture?> {
         val future = Texture.builder()
             .setSource(this@ShadeSelectionActivity, Uri.parse(modelUri))
