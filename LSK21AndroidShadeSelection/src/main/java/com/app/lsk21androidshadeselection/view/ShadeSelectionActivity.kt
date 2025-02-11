@@ -533,13 +533,14 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             if(node.localPosition.y == yAxis+shiftYAxis){
                 if(shadeCode!=null){
                     selectedShades.remove(shadeCode)
-                    cntOfMannualSelection--
+                    if(cntOfMannualSelection!=0)// this check is avoid to -ve value case when selected tabs using AI and then shifted back to original position.
+                        cntOfMannualSelection--
                     if(selectedShades.size==0){
                         binding.btnAiIcon.isEnabled = true
                     }
                     placeAtYAxis(node)
                 }
-                if(cntOfMannualSelection==0){
+                if(selectedShades.size == 0){//cntOfMannualSelection==0
                     binding.btnSubmit.visibility = View.GONE
                 }
                 return
