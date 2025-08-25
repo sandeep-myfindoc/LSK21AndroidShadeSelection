@@ -101,6 +101,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private val defaultIntensity: Float = 550.0f
     private val minIntensity: Float = 500.0f
     private val multiplier = 1500
+    private var selectedEventType = ""
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
@@ -113,7 +114,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         arFragment.planeDiscoveryController.setInstructionView(null)
         arFragment.arSceneView.planeRenderer.isVisible = false
         lightNode.setParent(arFragment.arSceneView.scene)
-        val selectedEventType = intent.getStringExtra("selectedEventType")
+         selectedEventType = intent.getStringExtra("selectedEventType").toString()
         checkPermission()
         if (selectedEventType.equals("shade")){
             binding.btnAiIcon.visibility = View.VISIBLE
@@ -440,8 +441,8 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private fun handleTouch(event: MotionEvent) {
         val hitTestResult = arFragment.arSceneView.scene.hitTest(event)
         if(hitTestResult.node!=null){
-//            if(!binding.btnAiIcon.isEnabled)
-//                return
+            if(!binding.btnAiIcon.isEnabled)
+                return
             onModelClicked(hitTestResult.node!! as TransformableNode)
         }
 
@@ -736,8 +737,11 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         }
     }
     public fun moveLeft(view: View){
-//        if(cntLeftMove==6)
-//            return
+        if (selectedEventType.equals("shade")){
+            if(cntLeftMove==6)
+            return
+        }
+
         for ((key, node) in modelNode) {
             node.localPosition = com.google.ar.sceneform.math.Vector3(
                 node.localPosition.x-(width*1),
@@ -754,8 +758,11 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
 
     }
     public fun moveRight(view: View){
-//        if(cntRightMove==6)
-//            return
+        if (selectedEventType.equals("shade")){
+            if(cntRightMove==6)
+                return
+        }
+
         for ((key, node) in modelNode) {
             node.localPosition = com.google.ar.sceneform.math.Vector3(
                 node.localPosition.x+(width*1),
