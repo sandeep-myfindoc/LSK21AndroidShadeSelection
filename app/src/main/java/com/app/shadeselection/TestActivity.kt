@@ -13,7 +13,16 @@ class TestActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this,R.layout.activity_test)
         binding.startTest.setOnClickListener {
-            startActivityForResult(Intent(this@TestActivity, ShadeSelectionActivity:: class.java),1)
+//            startActivityForResult(Intent(this@TestActivity, ShadeSelectionActivity:: class.java),1)
+            val intent = Intent(this@TestActivity, ShadeSelectionActivity::class.java)
+            intent.putExtra("selectedEventType", "shade")
+            startActivityForResult(intent, 1)
+        }
+
+        binding.startTest2.setOnClickListener{
+            val intent = Intent(this@TestActivity, ShadeSelectionActivity::class.java)
+            intent.putExtra("selectedEventType", "shadeNew")
+            startActivityForResult(intent, 1)
         }
 
     }
