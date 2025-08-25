@@ -27,7 +27,6 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.app.lsk21androidshadeselection.R
 import com.app.lsk21androidshadeselection.databinding.ActivityShadeSelectionBinding
-import com.app.lsk21androidshadeselection.modal.ModalParse
 import com.app.lsk21androidshadeselection.modal.ModalToParse
 import com.app.lsk21androidshadeselection.network.UploadFileToServer
 import com.app.lsk21androidshadeselection.util.ResultReceiver
