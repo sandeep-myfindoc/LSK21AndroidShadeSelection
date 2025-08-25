@@ -101,6 +101,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private val defaultIntensity: Float = 550.0f
     private val minIntensity: Float = 500.0f
     private val multiplier = 1500
+    private var selectedEventType = ""
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_shade_selection)
@@ -113,31 +114,51 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         arFragment.planeDiscoveryController.setInstructionView(null)
         arFragment.arSceneView.planeRenderer.isVisible = false
         lightNode.setParent(arFragment.arSceneView.scene)
+         selectedEventType = intent.getStringExtra("selectedEventType").toString()
         checkPermission()
-        try{
-            var cnt = 1
-            for(cnt in 1..5){
-                modelFiles.add(ModalToParse("model/CB".plus(cnt).plus(".glb"),
-                    "model/textures/CB".plus(cnt).plus("_BaseColor.png")))
+        if (selectedEventType.equals("shade")){
+            binding.btnAiIcon.visibility = View.VISIBLE
+            try{
+                var cnt = 1
+                for(cnt in 1..5){
+                    modelFiles.add(ModalToParse("model/CB".plus(cnt).plus(".glb"),
+                        "model/textures/CB".plus(cnt).plus("_BaseColor.png")))
+                }
+                cnt = 1
+                for(cnt in 1..3){
+                    modelFiles.add(ModalToParse("model/YS".plus(cnt).plus(".glb"),
+                        "model/textures/YS".plus(cnt).plus("_BaseColor.png")))
+                }
+                cnt = 1
+                for(cnt in 1..5){
+                    modelFiles.add(ModalToParse("model/MS".plus(cnt).plus(".glb"),
+                        "model/textures/MS".plus(cnt).plus("_BaseColor.png")))
+                }
+                cnt = 1
+                for(cnt in 1..7){
+                    modelFiles.add(ModalToParse("model/LS".plus(cnt).plus(".glb"),
+                        "model/textures/LS".plus(cnt).plus("_BaseColor.png")))
+                }
+            }catch(ex: Exception){
+                ex.printStackTrace()
             }
-            cnt = 1
-            for(cnt in 1..3){
-                modelFiles.add(ModalToParse("model/YS".plus(cnt).plus(".glb"),
-                    "model/textures/YS".plus(cnt).plus("_BaseColor.png")))
+        }else{
+            binding.btnAiIcon.visibility = View.GONE
+            try{
+                var cnt = 1
+                for(cnt in 1..24){
+                    Log.i("TAG", "onCreate111111111: "+cnt)
+                    modelFiles.add(ModalToParse("model2/PC".plus(cnt).plus(".glb"),
+                        "model/textures/PC".plus(cnt).plus("_BaseColor.png")))
+
+                    Log.i("TAG", "onCreate111111111: "+modelFiles.size)
+                }
+
+            }catch(ex: Exception){
+                ex.printStackTrace()
             }
-            cnt = 1
-            for(cnt in 1..5){
-                modelFiles.add(ModalToParse("model/MS".plus(cnt).plus(".glb"),
-                    "model/textures/MS".plus(cnt).plus("_BaseColor.png")))
-            }
-            cnt = 1
-            for(cnt in 1..7){
-                modelFiles.add(ModalToParse("model/LS".plus(cnt).plus(".glb"),
-                    "model/textures/LS".plus(cnt).plus("_BaseColor.png")))
-            }
-        }catch(ex: Exception){
-            ex.printStackTrace()
         }
+
         GlobalScope.launch(Dispatchers.Main) {
             binding.btnAiIcon.isEnabled = false
             loadNextModel()
@@ -716,8 +737,11 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         }
     }
     public fun moveLeft(view: View){
-        if(cntLeftMove==6)
+        if (selectedEventType.equals("shade")){
+            if(cntLeftMove==6)
             return
+        }
+
         for ((key, node) in modelNode) {
             node.localPosition = com.google.ar.sceneform.math.Vector3(
                 node.localPosition.x-(width*1),
@@ -734,8 +758,11 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
 
     }
     public fun moveRight(view: View){
-        if(cntRightMove==6)
-            return
+        if (selectedEventType.equals("shade")){
+            if(cntRightMove==6)
+                return
+        }
+
         for ((key, node) in modelNode) {
             node.localPosition = com.google.ar.sceneform.math.Vector3(
                 node.localPosition.x+(width*1),
