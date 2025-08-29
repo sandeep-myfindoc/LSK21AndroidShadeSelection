@@ -423,20 +423,20 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         modelNodeTemp.localPosition = com.google.ar.sceneform.math.Vector3(x,yAxis,-0.1f)
         modelNodeTemp.name = modelIndex.toString()
         // to scale model
-
+        var maxScale1 = 1.60f
         if (selectedEventType.equals("shade")){
             modelNodeTemp.scaleController.minScale = minScale
             modelNodeTemp.scaleController.maxScale = maxScale
         }else{
             if (modelIndex ==21 ){
-                maxScale = 1.70f
+                maxScale1 = 1.70f
             }else if (modelIndex ==22){
-                maxScale = 1.68f
+                maxScale1 = 1.68f
             }else if(modelIndex ==23){
-                maxScale = 1.65f
+                maxScale1 = 1.65f
             }
             modelNodeTemp.scaleController.minScale = minScale
-            modelNodeTemp.scaleController.maxScale = maxScale
+            modelNodeTemp.scaleController.maxScale = maxScale1
         }
         modelNodeTemp.localScale = com.google.ar.sceneform.math.Vector3(1.0f, 1.0f, 1.0f)
         //modelNodeTemp.light = addPointLight()
