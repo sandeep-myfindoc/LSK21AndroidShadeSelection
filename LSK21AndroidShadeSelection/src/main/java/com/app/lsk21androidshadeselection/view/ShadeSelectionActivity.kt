@@ -566,8 +566,14 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
                 }
                 return
             }
-            if(cntOfMannualSelection==3){
-                return
+            if (selectedEventType.equals("shade")){
+                if(cntOfMannualSelection==3){
+                    return
+                }
+            }else{
+                if(cntOfMannualSelection==2){
+                    return
+                }
             }
             if(selectedShades.size<6){
                 if(shadeCode!=null){
@@ -739,7 +745,10 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     public fun moveLeft(view: View){
         if (selectedEventType.equals("shade")){
             if(cntLeftMove==6)
-            return
+                return
+        }else{
+            if(cntLeftMove==10)
+                return
         }
 
         for ((key, node) in modelNode) {
@@ -758,10 +767,8 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
 
     }
     public fun moveRight(view: View){
-        if (selectedEventType.equals("shade")){
-            if(cntRightMove==6)
-                return
-        }
+        if(cntRightMove==6)
+            return
 
         for ((key, node) in modelNode) {
             node.localPosition = com.google.ar.sceneform.math.Vector3(
