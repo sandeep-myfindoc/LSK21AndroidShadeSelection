@@ -23,8 +23,6 @@ import android.view.View
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import com.app.lsk21androidshadeselection.R
 import com.app.lsk21androidshadeselection.databinding.ActivityShadeSelectionBinding
 import com.app.lsk21androidshadeselection.modal.ModalToParse
@@ -76,7 +74,7 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
     private val yAxis = -0.038f
     private val shiftYAxis: Float = 0.004f
     private val minScale: Float = 0.05f
-    private val maxScale: Float = 1.60f
+    private var maxScale: Float = 1.60f
     private val zoomAbleScale: Float = 1.95f
     private lateinit var viewModel: ShadeSelectionViewModel
     val modelNode: HashMap<String, TransformableNode> = HashMap()
@@ -423,9 +421,23 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
         //modelNodeTemp.localPosition = com.google.ar.sceneform.math.Vector3(x,0.084f,-0.35f)//x,0.069f,-0.30f
         //modelNodeTemp.localPosition = com.google.ar.sceneform.math.Vector3(x,0.022f,-0.1f)
         modelNodeTemp.localPosition = com.google.ar.sceneform.math.Vector3(x,yAxis,-0.1f)
+        modelNodeTemp.name = modelIndex.toString()
         // to scale model
-        modelNodeTemp.scaleController.minScale = minScale
-        modelNodeTemp.scaleController.maxScale = maxScale
+
+        if (selectedEventType.equals("shade")){
+            modelNodeTemp.scaleController.minScale = minScale
+            modelNodeTemp.scaleController.maxScale = maxScale
+        }else{
+            if (modelIndex ==21 ){
+                maxScale = 1.70f
+            }else if (modelIndex ==22){
+                maxScale = 1.68f
+            }else if(modelIndex ==23){
+                maxScale = 1.65f
+            }
+            modelNodeTemp.scaleController.minScale = minScale
+            modelNodeTemp.scaleController.maxScale = maxScale
+        }
         modelNodeTemp.localScale = com.google.ar.sceneform.math.Vector3(1.0f, 1.0f, 1.0f)
         //modelNodeTemp.light = addPointLight()
         /*if(modelNodeTemp.isSelected){
@@ -687,7 +699,21 @@ class ShadeSelectionActivity : BaseActivity(),ResultReceiver {
             yAxis,
             node.localPosition.z + 0.0f
         )
-        node.scaleController.maxScale = maxScale
+        if (selectedEventType.equals("shade")){
+            node.scaleController.maxScale = maxScale
+        }else{
+            if (node.name == "21"){
+                node.scaleController.maxScale = 1.70f
+            }else if(node.name =="22"){
+                node.scaleController.maxScale = 1.68f
+            }else if(node.name == "23"){
+                node.scaleController.maxScale = 1.65f
+            }else{
+                node.scaleController.maxScale = maxScale
+            }
+
+        }
+
     }
     public fun moveBack(view: View){
         val resultIntent = Intent()
