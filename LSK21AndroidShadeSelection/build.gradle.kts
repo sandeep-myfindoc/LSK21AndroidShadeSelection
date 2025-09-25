@@ -51,10 +51,10 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     /*ScenceForm*/
-    implementation ("com.google.ar:core:1.46.0")
-    implementation ("com.google.ar.sceneform:core:1.17.1")
-    implementation ("com.google.ar.sceneform:assets:1.17.1")
-    implementation("com.google.ar.sceneform.ux:sceneform-ux:1.17.1")
+    implementation ("com.google.ar:core:1.50.0")
+    implementation (libs.sceneform.core)
+    implementation (libs.assets)
+    implementation(libs.sceneform.ux)
     implementation ("com.github.AtifSayings:CircularImageView:1.0.2")
 
     /*Retrofit */
