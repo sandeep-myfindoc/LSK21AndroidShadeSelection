@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.app.shadeselection"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.app.shadeselection"
